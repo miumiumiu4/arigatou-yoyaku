@@ -3,211 +3,487 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>読者限定 エアコンクリーニング予約｜ありがとうエアコンお掃除専門店</title>
-<meta name="description" content="メルマガ読者限定。エアコンクリーニング1台6,000円（通常8,900円）。9月30日までのご予約、作業は10〜11月。">
+<title>読者限定 エアコンクリーニング1台6,000円｜ありがとうエアコンお掃除専門店</title>
+<meta name="description" content="メルマガ読者限定。エアコンクリーニング通常8,900円→1台6,000円（約33%OFF）。9月30日までのご予約、作業は10〜11月。3点セット7,000円。">
 <style>
   :root{
-    --bg:#f7f9fb; --card:#ffffff; --ink:#1d2b36; --muted:#5f6f7c; --line:#dfe6ec;
-    --accent:#1f8a70; --accent-ink:#ffffff; --warn:#b4532a; --soft:#e8f5f0;
+    --bg:#fffaf5; --card:#fff; --ink:#2b2420; --muted:#7a6b62; --line:#f0e2d6;
+    --or:#f26b1d; --or2:#ff9a3c; --or-soft:#fff1e6; --or-ink:#fff;
+    --green:#1f8a70; --green-soft:#e8f5f0; --warn:#c0392b;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;line-height:1.7}
-  .wrap{max-width:720px;margin:0 auto;padding:24px 16px 80px}
-  header{margin-bottom:20px}
-  .badge{display:inline-block;background:var(--soft);color:var(--accent);font-weight:700;padding:4px 12px;border-radius:999px;font-size:13px}
-  h1{font-size:24px;margin:10px 0 6px;line-height:1.35}
-  .lead{color:var(--muted);margin:0}
-  .price{display:flex;align-items:baseline;gap:12px;margin:16px 0;flex-wrap:wrap}
-  .price .old{color:var(--muted);text-decoration:line-through;font-size:16px}
-  .price .new{font-size:36px;font-weight:800;color:var(--accent)}
-  .price .off{background:var(--accent);color:#fff;border-radius:6px;padding:2px 8px;font-size:13px;font-weight:700}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
-  .card h2{font-size:17px;margin:0 0 12px;padding-bottom:8px;border-bottom:2px solid var(--soft)}
-  ul.cond{margin:0;padding-left:20px}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;line-height:1.75}
+  img{max-width:100%}
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px}
+  section{padding:40px 0}
+  h2{font-size:22px;margin:0 0 6px;text-align:center;line-height:1.4}
+  .sub{color:var(--or);font-weight:700;font-size:13px;text-align:center;letter-spacing:.1em;margin:0 0 20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:14px}
+  .btn{display:block;width:100%;border:0;border-radius:14px;padding:18px;font-size:18px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;
+       background:linear-gradient(135deg,var(--or),var(--or2));color:var(--or-ink);box-shadow:0 8px 20px rgba(242,107,29,.28)}
+  .btn.ghost{background:#fff;color:var(--or);border:2px solid var(--or);box-shadow:none}
+  .btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+  .note{font-size:13px;color:var(--muted)}
+  /* hero */
+  .hero{background:linear-gradient(160deg,#fff4ea 0%,#fff 60%);padding:36px 0 28px;border-bottom:1px solid var(--line)}
+  .badge{display:inline-block;background:var(--or);color:#fff;font-weight:800;padding:5px 14px;border-radius:999px;font-size:13px;letter-spacing:.05em}
+  .hero h1{font-size:28px;line-height:1.35;margin:14px 0 8px}
+  .hero .lead{margin:0 0 18px;color:var(--muted)}
+  .pricebox{background:#fff;border:2px solid var(--or);border-radius:18px;padding:18px 20px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-bottom:14px}
+  .pricebox .old{text-decoration:line-through;color:var(--muted);font-size:16px}
+  .pricebox .new{font-size:44px;font-weight:900;color:var(--or);line-height:1}
+  .pricebox .new small{font-size:15px;font-weight:600;color:var(--ink)}
+  .pricebox .off{background:var(--or);color:#fff;border-radius:8px;padding:3px 10px;font-weight:800;font-size:14px}
+  .deadline{background:var(--or-soft);border-radius:12px;padding:12px 16px;font-weight:700;display:flex;gap:10px;align-items:center;margin-bottom:16px}
+  .deadline b{color:var(--or);font-size:18px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+  .stats div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 6px;text-align:center}
+  .stats b{display:block;font-size:22px;color:var(--or);line-height:1.2}
+  .stats span{font-size:12px;color:var(--muted)}
+  /* features */
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:560px){.feat{grid-template-columns:1fr}}
+  .feat .card{margin:0;text-align:center}
+  .feat .ico{width:56px;height:56px;border-radius:50%;background:var(--or-soft);color:var(--or);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 10px}
+  .feat h3{font-size:16px;margin:0 0 6px}
+  .feat p{margin:0;font-size:14px;color:var(--muted)}
+  /* price table */
+  table.pt{width:100%;border-collapse:collapse;font-size:15px;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+  .pt th,.pt td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+  .pt th{background:var(--or-soft);font-size:13px;color:var(--muted)}
+  .pt td:last-child,.pt th:last-child{text-align:right;white-space:nowrap}
+  .pt .n{color:var(--or);font-weight:900;font-size:19px}
+  .pt .o{color:var(--muted);text-decoration:line-through;font-size:13px;margin-right:6px}
+  .pt tr.hl td{background:#fff7f0}
+  /* wizard */
+  .steps{display:flex;justify-content:center;gap:6px;margin:0 0 18px;font-size:12px;color:var(--muted);align-items:center;flex-wrap:wrap}
+  .steps span{display:flex;align-items:center;gap:6px}
+  .steps i{font-style:normal;width:24px;height:24px;border-radius:50%;background:#e8ddd4;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+  .steps span.on{color:var(--or);font-weight:700}
+  .steps span.on i{background:var(--or)}
+  .steps em{width:18px;height:1px;background:#e8ddd4}
+  .pane{display:none}.pane.on{display:block}
+  .row-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:10px}
+  .row-item.main{border-color:var(--or);background:#fff7f0}
+  .row-item .t b{display:block;font-size:15px}
+  .row-item .t span{font-size:12px;color:var(--muted)}
+  .row-item .t .tag{display:inline-block;background:var(--or);color:#fff;border-radius:6px;padding:1px 7px;font-size:11px;font-weight:700;margin-right:6px}
+  .ctr{display:flex;align-items:center;gap:8px;flex:none}
+  .ctr button{width:36px;height:36px;border-radius:50%;border:2px solid var(--or);background:#fff;color:var(--or);font-size:20px;font-weight:700;cursor:pointer;line-height:1}
+  .ctr button:disabled{opacity:.3;cursor:not-allowed}
+  .ctr output{min-width:28px;text-align:center;font-weight:800;font-size:18px}
+  .est{background:linear-gradient(135deg,var(--or),var(--or2));color:#fff;border-radius:18px;padding:20px;margin:16px 0 10px;box-shadow:0 10px 24px rgba(242,107,29,.3)}
+  .est .l{font-size:13px;opacity:.9}
+  .est .v{font-size:40px;font-weight:900;line-height:1.1}
+  .est .v small{font-size:15px;font-weight:600}
+  .est .d{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.35);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
+  .tip{background:#fffbea;border:1px solid #f3e2a0;border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:12px}
   label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}
   label small{font-weight:400;color:var(--muted)}
-  input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],select,textarea{
-    width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:#fff;color:var(--ink)}
-  textarea{min-height:90px}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media(max-width:520px){.row{grid-template-columns:1fr}}
-  .check{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:10px;margin-top:8px;cursor:pointer}
-  .check input{margin-top:5px;width:18px;height:18px}
-  .check b{display:block}
-  .check span{color:var(--muted);font-size:13px}
-  .total{background:var(--soft);border-radius:12px;padding:16px;margin-top:16px}
-  .total table{width:100%;border-collapse:collapse;font-size:14px}
-  .total td{padding:4px 0}
-  .total td:last-child{text-align:right;white-space:nowrap}
-  .total .sum td{font-size:20px;font-weight:800;border-top:1px solid #c9e3da;padding-top:8px}
-  .btn{display:block;width:100%;background:var(--accent);color:var(--accent-ink);border:0;border-radius:12px;padding:16px;font-size:18px;font-weight:800;cursor:pointer;margin-top:18px}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .note{font-size:13px;color:var(--muted)}
-  .ref{background:#fff8e6;border:1px solid #f2dfa8;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:8px}
-  .msg{display:none;padding:16px;border-radius:12px;margin-top:16px}
-  .msg.ok{display:block;background:var(--soft);color:var(--accent)}
-  .msg.ng{display:block;background:#fbe9e2;color:var(--warn)}
-  .closed{background:#fbe9e2;color:var(--warn);padding:16px;border-radius:12px;font-weight:700}
-  footer{margin-top:30px;font-size:13px;color:var(--muted);text-align:center}
+  input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{width:100%;padding:12px;border:1px solid #e3d5c8;border-radius:10px;font-size:16px;background:#fff;color:var(--ink)}
+  textarea{min-height:80px}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:520px){.g2{grid-template-columns:1fr}}
+  .sum{width:100%;border-collapse:collapse;font-size:14px}
+  .sum td{padding:7px 0;border-bottom:1px dashed var(--line)}
+  .sum td:last-child{text-align:right;white-space:nowrap}
+  .sum tr.tot td{font-weight:900;font-size:18px;color:var(--or);border:0}
+  .ref{background:#fff8e6;border:1px solid #f2dfa8;border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:10px}
+  .msg{display:none;padding:14px;border-radius:12px;margin-top:12px}
+  .msg.ng{display:block;background:#fdecea;color:var(--warn)}
+  .done{text-align:center;padding:20px 0}
+  .done .ck{width:72px;height:72px;border-radius:50%;background:var(--green-soft);color:var(--green);font-size:38px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  /* flow */
+  .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:560px){.flow{grid-template-columns:1fr}}
+  .flow .card{margin:0;text-align:center}
+  .flow .num{width:36px;height:36px;border-radius:50%;background:var(--or);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+  /* voice */
+  .voice .card{margin-bottom:12px}
+  .voice .stars{color:#f5a623;letter-spacing:2px;font-size:14px}
+  .voice .who{font-size:13px;color:var(--muted);margin-top:6px}
+  /* faq */
+  details{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:10px}
+  summary{font-weight:700;cursor:pointer;list-style:none;display:flex;gap:10px}
+  summary::before{content:"Q";color:var(--or);font-weight:900}
+  details p{margin:10px 0 0;font-size:14px;color:var(--muted);padding-left:22px}
+  ul.plain{margin:0;padding-left:20px;font-size:14px;color:var(--muted)}
+  .refer{background:#fff;border:2px dashed var(--or);border-radius:16px;padding:20px}
+  .refer .big{font-size:30px;font-weight:900;color:var(--or)}
+  .sticky{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center;z-index:20;box-shadow:0 -6px 20px rgba(0,0,0,.06)}
+  .sticky .p{flex:1;font-size:13px;color:var(--muted)}
+  .sticky .p b{display:block;font-size:18px;color:var(--or)}
+  .sticky a{flex:none;width:auto;padding:12px 22px;font-size:15px}
+  footer{padding:30px 0 90px;text-align:center;font-size:13px;color:var(--muted)}
+  .closed{background:#fdecea;color:var(--warn);padding:16px;border-radius:12px;font-weight:700;margin:20px 0}
 </style>
 </head>
 <body>
-<div class="wrap">
-<header>
+
+<!-- ===== HERO ===== -->
+<div class="hero"><div class="wrap">
   <span class="badge">メルマガ読者限定</span>
-  <h1>エアコンクリーニング<br>読者限定価格でご予約</h1>
-  <p class="lead">ありがとうエアコンお掃除専門店</p>
-  <div class="price">
+  <h1>エアコンクリーニング<br>1台 6,000円で承ります</h1>
+  <p class="lead">ありがとうエアコンお掃除専門店｜全国55店舗・口コミ3万件以上のプロが、お伺いします。</p>
+  <div class="pricebox">
     <span class="old">通常 8,900円</span>
-    <span class="new">6,000円<small style="font-size:14px;font-weight:400">/1台・税込</small></span>
+    <span class="new">6,000<small>円 /1台・税込</small></span>
     <span class="off">約33%OFF</span>
   </div>
-</header>
+  <div class="deadline">⏰ <span>ご予約は <b>9月30日まで</b>／作業は10月・11月</span></div>
+  <a class="btn" href="#book">▶ 台数を選んで概算を見る（30秒）</a>
+  <div class="stats">
+    <div><b>55店舗</b><span>全国ネットワーク</span></div>
+    <div><b>30,000件+</b><span>グループ口コミ</span></div>
+    <div><b>33%OFF</b><span>読者限定価格</span></div>
+  </div>
+</div></div>
 
-<div class="card">
-  <h2>ご予約の条件</h2>
-  <ul class="cond">
-    <li><b>9月30日まで</b>にこのページからご予約</li>
-    <li>作業日は<b>10月または11月</b>（12月は大掃除繁忙期のためお受けできません）</li>
-    <li>2台目以降は1台 <b>5,000円</b>／お掃除機能付きは1台あたり <b>＋5,000円</b></li>
-    <li>料金はすべて税込。駐車場代は別途実費</li>
-    <li>対応エリア：関東・中部地方・関西・九州・仙台</li>
-  </ul>
+<div class="wrap">
+
+<!-- ===== 条件 ===== -->
+<section>
+  <p class="sub">CAMPAIGN</p>
+  <h2>読者限定キャンペーンの内容</h2>
+  <div class="card" style="margin-top:16px">
+    <ul class="plain" style="font-size:15px;color:var(--ink)">
+      <li><b>9月30日まで</b>にこのページからご予約</li>
+      <li>作業日は<b>10月または11月</b>（12月は大掃除の繁忙期のためお受けできません）</li>
+      <li>1台目 <b>6,000円</b>、2台目以降 <b>1台5,000円</b></li>
+      <li>お掃除機能付きは1台あたり <b>＋5,000円</b>（通常＋6,000円）</li>
+      <li>3点セット（防カビ抗菌コート・室外機・ドレンホース）<b>1台7,000円</b>（別々なら9,500円）</li>
+      <li>料金はすべて税込。駐車場代は別途実費</li>
+      <li>対応エリア：関東・中部地方・関西・九州・仙台</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== コンセプト ===== -->
+<section style="padding-top:0">
+  <p class="sub">ABOUT</p>
+  <h2>ありがとうエアコンお掃除専門店は<br>こんなお店です</h2>
+  <div class="card" style="margin-top:16px">
+    <p style="margin:0 0 10px">毎日、自分や家族の元気な笑顔を望んで暮らしている方へ。</p>
+    <p style="margin:0 0 10px">私たちは、基準の高い研修をクリアしたプロのスタッフが、<b>低価格・最高品質・超満足度</b>のクリーニングをお届けすることを使命にしています。全国55店舗、グループ口コミ3万件以上。一度辞めたスタッフが「やっぱりここで続けたい」と戻ってくるのは、お客様からの厚い応援があるからです。</p>
+    <p style="margin:0">2027年、安価なエアコンが販売できなくなり、買い替えの値段は上がります。だからこそ「今あるエアコンを、手入れして長く使う」。その第一歩を、この価格で体験してほしいと思っています。</p>
+  </div>
+</section>
+
+<!-- ===== 技術 ===== -->
+<section style="padding-top:0">
+  <p class="sub">QUALITY</p>
+  <h2>プロの技術は、ここが違う</h2>
+  <div class="feat" style="margin-top:16px">
+    <div class="card"><div class="ico">🛡</div><h3>しっかり養生</h3><p>エアコン周りの壁・床・家具まで新品の養生材で保護。大切な家財を汚しません。</p></div>
+    <div class="card"><div class="ico">🔧</div><h3>徹底的に分解</h3><p>カバー・フィルター・ファンまで外し、一つひとつ手洗いで洗浄します。</p></div>
+    <div class="card"><div class="ico">💦</div><h3>隅々まで高圧洗浄</h3><p>専用機材と薬剤で内部のカビ・ホコリを根こそぎ。においと電気代が変わります。</p></div>
+  </div>
+</section>
+
+<!-- ===== 料金 ===== -->
+<section style="padding-top:0">
+  <p class="sub">PRICE</p>
+  <h2>読者限定料金表</h2>
+  <p class="note" style="text-align:center;margin:0 0 14px">すべて税込・駐車場代別</p>
+  <table class="pt">
+    <tr><th>エアコンクリーニング（壁掛け）</th><th>読者限定</th></tr>
+    <tr class="hl"><td>1台目</td><td><span class="o">8,900円</span><span class="n">6,000円</span></td></tr>
+    <tr><td>2台目以降（1台あたり）</td><td><span class="o">8,900円</span><span class="n">5,000円</span></td></tr>
+    <tr><td>お掃除機能付き（1台あたり加算）</td><td><span class="o">＋6,000円</span><span class="n">＋5,000円</span></td></tr>
+  </table>
+  <div style="height:14px"></div>
+  <table class="pt">
+    <tr><th>オプション（1台あたり）</th><th>読者限定</th></tr>
+    <tr class="hl"><td>🏆 <b>3点セット</b>（防カビ抗菌コート＋室外機＋ドレンホース）</td><td><span class="o">9,500円</span><span class="n">7,000円</span></td></tr>
+    <tr><td>防カビ・抗菌コート</td><td><span class="n" style="font-size:16px">3,000円</span></td></tr>
+    <tr><td>室外機クリーニング</td><td><span class="n" style="font-size:16px">4,000円</span></td></tr>
+    <tr><td>ドレンホース洗浄</td><td><span class="n" style="font-size:16px">2,500円</span></td></tr>
+  </table>
+  <p class="note" style="margin-top:10px">※ 埋込み・天吊りエアコン、10年以上経過した機種、床置き・壁埋め込み機種は今回のキャンペーン対象外です。お問い合わせください。</p>
+</section>
+
+<!-- ===== 予約ウィザード ===== -->
+<section id="book" style="padding-top:0">
+  <p class="sub">RESERVE</p>
+  <h2>台数を選んで、そのまま予約</h2>
+  <p class="note" style="text-align:center;margin:0 0 16px">概算が出ます。入力は最後にまとめて。</p>
+  <div id="closed" class="closed" style="display:none">今回の読者限定予約は9月30日で終了しました。ありがとうございました。</div>
+
+  <div class="card" id="wiz">
+    <div class="steps">
+      <span class="on" data-s="1"><i>1</i>試算</span><em></em>
+      <span data-s="2"><i>2</i>確認</span><em></em>
+      <span data-s="3"><i>3</i>情報入力</span><em></em>
+      <span data-s="4"><i>4</i>完了</span>
+    </div>
+    <div id="refbox" class="ref" style="display:none">ご紹介コード：<b id="refshow"></b>（ご紹介者様に紹介料をお支払いします）</div>
+
+    <!-- STEP1 -->
+    <div class="pane on" data-p="1">
+      <div class="row-item main"><div class="t"><b>エアコン台数（壁掛け）</b><span>1台目6,000円／2台目〜5,000円</span></div>
+        <div class="ctr"><button type="button" data-k="units" data-d="-1">−</button><output id="o_units">1</output><button type="button" data-k="units" data-d="1">＋</button></div></div>
+      <div class="row-item"><div class="t"><b>うち、お掃除機能付き</b><span>＋5,000円/台</span></div>
+        <div class="ctr"><button type="button" data-k="auto" data-d="-1">−</button><output id="o_auto">0</output><button type="button" data-k="auto" data-d="1">＋</button></div></div>
+
+      <p style="font-weight:700;margin:18px 0 8px">オプション（台数分お選びください）</p>
+      <div class="row-item main"><div class="t"><b><span class="tag">おすすめ</span>3点セット</b><span>防カビ抗菌コート＋室外機＋ドレンホース｜7,000円/台（別々なら9,500円）</span></div>
+        <div class="ctr"><button type="button" data-k="set3" data-d="-1">−</button><output id="o_set3">0</output><button type="button" data-k="set3" data-d="1">＋</button></div></div>
+      <div class="row-item"><div class="t"><b>防カビ・抗菌コート</b><span>3,000円/台</span></div>
+        <div class="ctr"><button type="button" data-k="coat" data-d="-1">−</button><output id="o_coat">0</output><button type="button" data-k="coat" data-d="1">＋</button></div></div>
+      <div class="row-item"><div class="t"><b>室外機クリーニング</b><span>4,000円/台</span></div>
+        <div class="ctr"><button type="button" data-k="outdoor" data-d="-1">−</button><output id="o_outdoor">0</output><button type="button" data-k="outdoor" data-d="1">＋</button></div></div>
+      <div class="row-item"><div class="t"><b>ドレンホース洗浄</b><span>2,500円/台</span></div>
+        <div class="ctr"><button type="button" data-k="drain" data-d="-1">−</button><output id="o_drain">0</output><button type="button" data-k="drain" data-d="1">＋</button></div></div>
+
+      <div class="est">
+        <div class="l">💰 読者限定 概算金額</div>
+        <div class="v">¥<span id="e_total">6,000</span><small> 円（税込・駐車場代別）</small></div>
+        <div class="d"><span>通常価格なら ¥<span id="e_normal">8,900</span></span><span>▶ <b>¥<span id="e_diff">2,900</span> お得</b></span></div>
+      </div>
+      <div class="tip">💡 こちらは概算です。作業当日、汚れの状態により追加費用が発生する場合は必ず事前にご説明します。</div>
+      <button class="btn" type="button" data-go="2">この内容で進む →</button>
+    </div>
+
+    <!-- STEP2 -->
+    <div class="pane" data-p="2">
+      <table class="sum" id="sumtbl"></table>
+      <div style="height:12px"></div>
+      <button class="btn" type="button" data-go="3">OK、予約情報を入力する →</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" type="button" data-go="1">← 台数を直す</button>
+    </div>
+
+    <!-- STEP3 -->
+    <div class="pane" data-p="3">
+      <form id="f">
+        <div class="g2">
+          <div><label>お名前 <small>必須</small></label><input type="text" name="name" required autocomplete="name"></div>
+          <div><label>電話番号 <small>必須</small></label><input type="tel" name="phone" required autocomplete="tel"></div>
+        </div>
+        <label>メールアドレス <small>必須（確認メール・PayPal請求書の送付先）</small></label>
+        <input type="email" name="email" required autocomplete="email">
+        <div class="g2">
+          <div><label>エリア <small>必須</small></label>
+            <select name="area" required><option value="">選択してください</option><option>関東</option><option>中部地方</option><option>関西</option><option>九州</option><option>仙台</option></select></div>
+          <div><label>郵便番号</label><input type="text" name="zip" inputmode="numeric" autocomplete="postal-code"></div>
+        </div>
+        <label>ご住所 <small>必須</small></label><input type="text" name="address" required autocomplete="street-address">
+        <div class="g2">
+          <div><label>作業希望日 第1希望 <small>10/1〜11/30</small></label><input type="date" name="date1" min="2026-10-01" max="2026-11-30" required></div>
+          <div><label>第2希望</label><input type="date" name="date2" min="2026-10-01" max="2026-11-30"></div>
+        </div>
+        <label>希望時間帯</label>
+        <select name="time"><option>午前</option><option>午後</option><option>どちらでも</option></select>
+        <label>お支払い方法</label>
+        <select name="payment"><option value="paypal">PayPal請求書（メールで届きます。カード払い可）</option><option value="onsite">作業当日にお支払い</option></select>
+        <label>駐車場 <small>駐車場代は別途実費</small></label>
+        <select name="parking"><option>敷地内に駐車可</option><option>近隣コインパーキング利用</option><option>相談したい</option></select>
+        <label>ご要望・備考</label>
+        <textarea name="note" placeholder="設置場所、メーカー、気になる症状、10年以上の機種かどうか など"></textarea>
+        <input type="hidden" name="ref" id="ref"><input type="hidden" name="campaign" value="mailmag_2026_09">
+        <div style="height:16px"></div>
+        <button class="btn" id="submit" type="submit">この内容で予約する</button>
+        <p class="note">送信後、確認メールをお送りします。作業日はご予約から5営業日以内に担当者よりご連絡し確定します。</p>
+        <div id="msg" class="msg"></div>
+      </form>
+      <button class="btn ghost" type="button" data-go="2" style="margin-top:8px">← 戻る</button>
+    </div>
+
+    <!-- STEP4 -->
+    <div class="pane" data-p="4">
+      <div class="done">
+        <div class="ck">✓</div>
+        <h3 style="margin:0 0 6px">ご予約を受け付けました</h3>
+        <p>受付番号：<b id="done_id"></b></p>
+        <p class="note" id="done_pay"></p>
+        <p class="note">確認メールをお送りしました。届かない場合は迷惑メールフォルダをご確認いただくか、☎ 080-4177-2272 までご連絡ください。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 紹介 ===== -->
+<section style="padding-top:0">
+  <p class="sub">REFERRAL</p>
+  <h2>ご紹介で、紹介料20%をお渡しします</h2>
+  <div class="refer" style="margin-top:16px">
+    <div class="big">通常価格の20%</div>
+    <p style="margin:6px 0 10px">このページのリンクをSNSやLINEでご紹介いただき、そこからご予約・お支払いまで進んだ場合、<b>通常価格（8,900円＋オプション、駐車場代を除く）の20%</b>を紹介料としてお支払いします。</p>
+    <p class="note" style="margin:0">紹介用リンクは、メルマガ記載のURL末尾に「?ref=あなたのコード」が付いたものです。お持ちでない方はお問い合わせください。</p>
+  </div>
+</section>
+
+<!-- ===== 流れ ===== -->
+<section style="padding-top:0">
+  <p class="sub">FLOW</p>
+  <h2>クリーニングまでの流れ</h2>
+  <div class="flow" style="margin-top:16px">
+    <div class="card"><div class="num">1</div><b>予約フォーム送信</b><p class="note" style="margin:6px 0 0">台数と希望日を入れて送信。確認メールが届きます。</p></div>
+    <div class="card"><div class="num">2</div><b>作業日を決定</b><p class="note" style="margin:6px 0 0">5営業日以内に担当者からご連絡。日程を確定します。</p></div>
+    <div class="card"><div class="num">3</div><b>プロがお伺い</b><p class="note" style="margin:6px 0 0">養生→分解→高圧洗浄。1台1〜2時間ほどです。</p></div>
+  </div>
+</section>
+
+<!-- ===== 口コミ ===== -->
+<section class="voice" style="padding-top:0">
+  <p class="sub">VOICE</p>
+  <h2>お客様の声</h2>
+  <p class="note" style="text-align:center;margin:0 0 16px">グループ口コミ 30,000件以上の中から</p>
+  <!-- ▼ 口コミ3件：公嗣さんから届き次第、ここを差し替え -->
+  <div class="card"><div class="stars">★★★★★</div><p style="margin:6px 0 0">【口コミ1をここに】</p><div class="who">— お客様（エリア）</div></div>
+  <div class="card"><div class="stars">★★★★★</div><p style="margin:6px 0 0">【口コミ2をここに】</p><div class="who">— お客様（エリア）</div></div>
+  <div class="card"><div class="stars">★★★★★</div><p style="margin:6px 0 0">【口コミ3をここに】</p><div class="who">— お客様（エリア）</div></div>
+  <a class="btn ghost" href="#book">▶ 読者限定価格で予約する</a>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section style="padding-top:0">
+  <p class="sub">FAQ</p>
+  <h2>よくある質問</h2>
+  <div style="margin-top:16px">
+    <details><summary>エアコンの下に家具があるのですが？</summary><p>移動できる小物は事前にご移動をお願いしています。難しい場合はしっかり養生して作業します。「汚さない・傷つけない・作業後はきれいな状態に」を全スタッフに徹底しています。</p></details>
+    <details><summary>3点セットは本当に必要ですか？</summary><p>本体だけ洗っても、においや水漏れの原因の半分はドレンホースと室外機に残ります。防カビ抗菌コートは洗った後のきれいな状態を長持ちさせるためのものです。「せっかく中を洗うなら、出口と外もきれいに」が一番長持ちする頼み方です。</p></details>
+    <details><summary>室外機クリーニングのメリットは？</summary><p>電気代の削減、エアコンの寿命延長、効き具合の向上が期待できます。</p></details>
+    <details><summary>お掃除機能付きかどうか分かりません</summary><p>リモコンや本体に「フィルター自動お掃除」「自動掃除」の表記があればお掃除機能付きです。分からない場合は備考にメーカー・型番をご記入ください。こちらで確認します。</p></details>
+    <details><summary>支払い方法は？</summary><p>PayPal請求書（クレジットカード可）、または作業当日のお支払いをお選びいただけます。PayPalをお選びの場合、ご予約後に請求書メールが自動で届きます。</p></details>
+    <details><summary>12月に作業してもらえますか？</summary><p>申し訳ありません。12月は大掃除の繁忙期のため、今回のキャンペーンは10月・11月の作業に限らせていただきます。</p></details>
+  </div>
+</section>
+
+<!-- ===== 保証対象外 ===== -->
+<section style="padding-top:0">
+  <p class="sub">NOTICE</p>
+  <h2>保証対象外・対応外について</h2>
+  <div class="card" style="margin-top:16px">
+    <ul class="plain">
+      <li><b>製造から10年以上経過した機種</b>：メーカーの補修部品が終了しており、経年劣化による不具合は保証対象外です</li>
+      <li><b>漆喰・土壁・珪藻土の壁</b>：水分を吸う性質のため、水染み・変色のリスクがあります</li>
+      <li><b>においの完全除去</b>：軽減はしますが、完全除去の保証はできません</li>
+      <li><b>移動が困難な家具類</b>：水濡れ・汚損は保証対象外となります</li>
+      <li><b>対応外機種</b>：床置き・壁埋め込み・製造18年以上経過の機種、埋込み・天吊り（今回のキャンペーン対象外）</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== エリア ===== -->
+<section style="padding-top:0">
+  <p class="sub">AREA</p>
+  <h2>対応エリア</h2>
+  <div class="card" style="margin-top:16px">
+    <p style="margin:0 0 6px"><b>関東</b>：東京・神奈川・埼玉・千葉</p>
+    <p style="margin:0 0 6px"><b>中部地方</b>：愛知・岐阜・三重</p>
+    <p style="margin:0 0 6px"><b>関西</b>：大阪・兵庫・奈良・京都</p>
+    <p style="margin:0 0 6px"><b>九州</b>：福岡</p>
+    <p style="margin:0"><b>東北</b>：仙台</p>
+    <p class="note" style="margin:10px 0 0">※ 一部離島・山間部はお伺いできない場合があります。</p>
+  </div>
+</section>
+
+<!-- ===== 募集 ===== -->
+<section style="padding-top:0">
+  <div class="card" style="background:var(--green-soft);border-color:#cfe8df">
+    <b>スタッフ募集中</b>
+    <p style="margin:6px 0 10px;font-size:14px">2027年以降のエアコンクリーニング需要増に向けて、業務委託スタッフを募集しています。未経験歓迎・報酬は売上の40%。</p>
+    <a href="recruit.html" style="color:var(--green);font-weight:700">募集の詳細・面接のお申し込み →</a>
+  </div>
+</section>
+
 </div>
 
-<div id="closed" class="closed" style="display:none">今回の読者限定予約は9月30日で終了しました。ありがとうございました。</div>
-
-<form id="f" class="card">
-  <h2>ご予約フォーム</h2>
-  <div id="refbox" class="ref" style="display:none">ご紹介コード：<b id="refshow"></b>（紹介者様に20%の紹介料をお支払いします）</div>
-
-  <div class="row">
-    <div><label>お名前 <small>必須</small></label><input type="text" name="name" required autocomplete="name"></div>
-    <div><label>電話番号 <small>必須</small></label><input type="tel" name="phone" required autocomplete="tel"></div>
-  </div>
-  <label>メールアドレス <small>必須（PayPal請求書の送付先）</small></label>
-  <input type="email" name="email" required autocomplete="email">
-
-  <div class="row">
-    <div><label>エリア <small>必須</small></label>
-      <select name="area" required>
-        <option value="">選択してください</option>
-        <option>関東</option><option>中部地方</option><option>関西</option><option>九州</option><option>仙台</option>
-      </select></div>
-    <div><label>郵便番号</label><input type="text" name="zip" inputmode="numeric" autocomplete="postal-code"></div>
-  </div>
-  <label>ご住所 <small>必須</small></label>
-  <input type="text" name="address" required autocomplete="street-address">
-
-  <div class="row">
-    <div><label>通常エアコン台数 <small>1台目6,000円／2台目〜5,000円</small></label>
-      <input type="number" name="units" min="0" max="20" value="1" required></div>
-    <div><label>うち、お掃除機能付き台数 <small>＋5,000円/台</small></label>
-      <input type="number" name="auto_units" min="0" max="20" value="0" required></div>
-  </div>
-
-  <label>オプション</label>
-  <label class="check"><input type="checkbox" name="set3" value="1">
-    <div><b>3点セット（ドレンホース洗浄・除菌抗菌コート・室外機清掃）</b>
-    <span>別々にご依頼いただくと約10,000円のセット。1台あたり <b id="set3price"></b>円</span></div></label>
-
-  <div class="row">
-    <div><label>作業希望日 第1希望 <small>10/1〜11/30</small></label><input type="date" name="date1" min="2026-10-01" max="2026-11-30" required></div>
-    <div><label>第2希望</label><input type="date" name="date2" min="2026-10-01" max="2026-11-30"></div>
-  </div>
-  <label>希望時間帯</label>
-  <select name="time"><option>午前</option><option>午後</option><option>どちらでも</option></select>
-
-  <label>お支払い方法</label>
-  <select name="payment">
-    <option value="paypal">PayPal請求書（メールで届きます）</option>
-    <option value="onsite">作業当日にお支払い</option>
-  </select>
-
-  <label>駐車場 <small>駐車場代は別途実費です</small></label>
-  <select name="parking"><option>敷地内に駐車可</option><option>近隣コインパーキング利用</option><option>相談したい</option></select>
-
-  <label>ご要望・備考</label>
-  <textarea name="note" placeholder="エアコンの設置場所、メーカー、気になる症状など"></textarea>
-
-  <input type="hidden" name="ref" id="ref">
-  <input type="hidden" name="campaign" value="mailmag_2026_09">
-
-  <div class="total">
-    <table>
-      <tr><td>エアコンクリーニング</td><td id="t_base">—</td></tr>
-      <tr><td>お掃除機能付き加算</td><td id="t_auto">—</td></tr>
-      <tr><td>3点セット</td><td id="t_set">—</td></tr>
-      <tr class="sum"><td>合計（税込・駐車場代別）</td><td id="t_sum">—</td></tr>
-    </table>
-    <p class="note" style="margin:8px 0 0">参考：通常価格なら <span id="t_normal">—</span>。差額 <span id="t_diff">—</span> お得です。</p>
-  </div>
-
-  <button class="btn" id="submit" type="submit">この内容で予約する</button>
-  <p class="note">送信後、確認メールをお送りします。PayPalをお選びの方には、請求書メールが自動で届きます。</p>
-  <div id="msg" class="msg"></div>
-</form>
+<div class="sticky">
+  <div class="p">読者限定 概算<b>¥<span id="s_total">6,000</span></b></div>
+  <a class="btn" href="#book">予約する</a>
+</div>
 
 <footer>ありがとうエアコンお掃除専門店 ☎ 080-4177-2272<br>© エイムポイント合同会社</footer>
-</div>
 
 <script>
-/* ====== 設定（ここだけ書き換えればOK） ====== */
+/* ====== 設定 ====== */
 const CONFIG = {
-  GAS_URL: "https://script.google.com/macros/s/AKfycbwzgjuZ_AdGByWhWuv4gSnQKBHVK3w96mrUbkED4ReAyFZIO9F-EZW8rECuwYMSxKlV/exec",   // 例: https://script.google.com/macros/s/xxxx/exec
-  PRICE_FIRST: 6000,      // 1台目
-  PRICE_ADDITIONAL: 5000, // 2台目以降
-  PRICE_AUTO: 5000,       // お掃除機能付き加算
-  PRICE_SET3: 9000,       // 3点セット 1台あたり（HPの正規料金に合わせて修正）
-  NORMAL_PRICE: 8900,     // 通常価格（紹介料計算の基準）
-  DEADLINE: "2026-09-30T23:59:59+09:00"
+  GAS_URL: "https://script.google.com/macros/s/AKfycbwzgjuZ_AdGByWhWuv4gSnQKBHVK3w96mrUbkED4ReAyFZIO9F-EZW8rECuwYMSxKlV/exec",
+  DEADLINE: "2026-09-30T23:59:59+09:00",
+  NORMAL_UNIT: 8900, NORMAL_AUTO: 6000, NORMAL_SET3: 9500
 };
-/* ========================================== */
+const ITEMS = {
+  units:   { name:"エアコンクリーニング", first:6000, add:5000 },
+  auto:    { name:"お掃除機能付き加算", price:5000, normal:6000 },
+  set3:    { name:"3点セット（防カビ抗菌コート・室外機・ドレンホース）", price:7000, normal:9500 },
+  coat:    { name:"防カビ・抗菌コート", price:3000, normal:3000 },
+  outdoor: { name:"室外機クリーニング", price:4000, normal:4000 },
+  drain:   { name:"ドレンホース洗浄", price:2500, normal:2500 }
+};
+const st = { units:1, auto:0, set3:0, coat:0, outdoor:0, drain:0 };
+const yen = n => n.toLocaleString("ja-JP");
+const $ = s => document.querySelector(s);
 
-const yen = n => n.toLocaleString("ja-JP") + "円";
-const f = document.getElementById("f");
-document.getElementById("set3price").textContent = CONFIG.PRICE_SET3.toLocaleString("ja-JP");
-
-// 紹介コード（?ref=xxxx）
 const ref = new URLSearchParams(location.search).get("ref") || "";
-if (ref) { document.getElementById("ref").value = ref; document.getElementById("refshow").textContent = ref; document.getElementById("refbox").style.display = "block"; }
-
-// 締切
-if (new Date() > new Date(CONFIG.DEADLINE)) { document.getElementById("closed").style.display = "block"; f.style.display = "none"; }
+if (ref) { $("#ref").value = ref; $("#refshow").textContent = ref; $("#refbox").style.display = "block"; }
+if (new Date() > new Date(CONFIG.DEADLINE)) { $("#closed").style.display = "block"; $("#wiz").style.display = "none"; }
 
 function calc(){
-  const u = Math.max(0, +f.units.value || 0);
-  const a = Math.min(u, Math.max(0, +f.auto_units.value || 0));
-  const set = f.set3.checked;
-  const base = u === 0 ? 0 : CONFIG.PRICE_FIRST + (u-1)*CONFIG.PRICE_ADDITIONAL;
-  const auto = a*CONFIG.PRICE_AUTO;
-  const s3 = set ? u*CONFIG.PRICE_SET3 : 0;
-  const sum = base+auto+s3;
-  const normal = u*CONFIG.NORMAL_PRICE + auto + s3;
-  document.getElementById("t_base").textContent = yen(base);
-  document.getElementById("t_auto").textContent = yen(auto);
-  document.getElementById("t_set").textContent = yen(s3);
-  document.getElementById("t_sum").textContent = yen(sum);
-  document.getElementById("t_normal").textContent = yen(normal);
-  document.getElementById("t_diff").textContent = yen(normal-sum);
-  return {units:u, auto_units:a, set3:set?1:0, total:sum, normal_total:normal};
+  const u = st.units;
+  const base = u ? ITEMS.units.first + (u-1)*ITEMS.units.add : 0;
+  const lines = [];
+  if (u) lines.push({ key:"units", name:ITEMS.units.name+" "+u+"台", qty:u, amount:base, normal:u*CONFIG.NORMAL_UNIT,
+                      items:[{name:"エアコンクリーニング（読者限定 1台目）",qty:1,unit:ITEMS.units.first}].concat(u>1?[{name:"エアコンクリーニング（2台目以降）",qty:u-1,unit:ITEMS.units.add}]:[]) });
+  ["auto","set3","coat","outdoor","drain"].forEach(k => { if (st[k]) lines.push({ key:k, name:ITEMS[k].name+" "+st[k]+"台", qty:st[k], amount:st[k]*ITEMS[k].price, normal:st[k]*ITEMS[k].normal, items:[{name:ITEMS[k].name,qty:st[k],unit:ITEMS[k].price}] }); });
+  const total = lines.reduce((a,l)=>a+l.amount,0), normal = lines.reduce((a,l)=>a+l.normal,0);
+  return { lines, total, normal };
 }
-f.addEventListener("input", calc); calc();
+function render(){
+  Object.keys(st).forEach(k => { $("#o_"+k).textContent = st[k]; });
+  const c = calc();
+  $("#e_total").textContent = yen(c.total); $("#e_normal").textContent = yen(c.normal); $("#e_diff").textContent = yen(c.normal-c.total);
+  $("#s_total").textContent = yen(c.total);
+  document.querySelectorAll(".ctr button").forEach(b => {
+    const k=b.dataset.k, d=+b.dataset.d;
+    if (d<0) b.disabled = st[k] <= 0;
+    else b.disabled = k==="units" ? st.units>=20 : st[k] >= st.units;
+  });
+}
+document.querySelectorAll(".ctr button").forEach(b => b.addEventListener("click", () => {
+  const k=b.dataset.k, d=+b.dataset.d;
+  st[k] = Math.max(0, st[k]+d);
+  if (k==="units") Object.keys(st).forEach(x => { if (x!=="units" && st[x] > st.units) st[x] = st.units; });
+  render();
+}));
+function go(n){
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("on", p.dataset.p==String(n)));
+  document.querySelectorAll(".steps span").forEach(s => s.classList.toggle("on", +s.dataset.s<=n));
+  if (n===2) {
+    const c = calc();
+    $("#sumtbl").innerHTML = c.lines.map(l=>`<tr><td>${l.name}</td><td>${yen(l.amount)}円</td></tr>`).join("")
+      + `<tr class="tot"><td>合計（税込・駐車場代別）</td><td>${yen(c.total)}円</td></tr>`
+      + `<tr><td class="note">通常価格 ${yen(c.normal)}円 → <b>${yen(c.normal-c.total)}円お得</b></td><td></td></tr>`;
+  }
+  $("#wiz").scrollIntoView({behavior:"smooth", block:"start"});
+}
+document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => {
+  if (b.dataset.go==="2" && st.units<1) { alert("エアコン台数を1台以上にしてください。"); return; }
+  go(+b.dataset.go);
+}));
+render();
 
-f.addEventListener("submit", async e => {
+$("#f").addEventListener("submit", async e => {
   e.preventDefault();
-  const btn = document.getElementById("submit"), msg = document.getElementById("msg");
-  const data = Object.fromEntries(new FormData(f).entries());
-  Object.assign(data, calc(), {submitted_at: new Date().toISOString(), page: location.href});
-  if (data.units < 1) { msg.className="msg ng"; msg.textContent="エアコン台数を1台以上にしてください。"; return; }
-  btn.disabled = true; btn.textContent = "送信中…";
+  const btn = $("#submit"), msg = $("#msg"), c = calc();
+  const data = Object.fromEntries(new FormData($("#f")).entries());
+  Object.assign(data, {
+    units: st.units, auto_units: st.auto, set3: st.set3 ? 1 : 0, set3_units: st.set3,
+    coat_units: st.coat, outdoor_units: st.outdoor, drain_units: st.drain,
+    breakdown: c.lines.map(l=>l.name+"="+yen(l.amount)+"円").join(" / "),
+    items: c.lines.flatMap(l=>l.items),
+    total: c.total, normal_total: c.normal, submitted_at: new Date().toISOString(), page: location.href
+  });
+  btn.disabled = true; btn.textContent = "送信中…"; msg.className="msg";
   try {
     const r = await fetch(CONFIG.GAS_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(data) });
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || "送信に失敗しました");
-    msg.className="msg ok";
-    msg.innerHTML = "ご予約を受け付けました（受付番号：<b>"+j.id+"</b>）。確認メールをお送りしました。" + (data.payment==="paypal" ? "PayPalの請求書メールも届きますのでご確認ください。" : "");
-    f.reset(); calc(); btn.textContent = "送信済み";
+    $("#done_id").textContent = j.id;
+    $("#done_pay").textContent = data.payment==="paypal" ? "PayPalの請求書メールが別途届きます。お支払いはご予約確定後で結構です。" : "お支払いは作業当日にお願いします。";
+    go(4);
   } catch(err) {
     msg.className="msg ng"; msg.textContent = "送信できませんでした。お手数ですが ☎080-4177-2272 までご連絡ください。（"+err.message+"）";
     btn.disabled=false; btn.textContent="この内容で予約する";

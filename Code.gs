@@ -91,7 +91,7 @@ function handleBooking_(d) {
     d.name, "'" + d.phone, d.email, d.area, d.zip || "", d.address,
     Number(d.units), Number(d.auto_units), d.set3 == 1 ? "あり" : "なし",
     Number(d.total), Number(d.normal_total),
-    d.date1, d.date2 || "", d.time, d.payment === "paypal" ? "PayPal" : "当日払い", d.parking, d.note || "",
+    d.date1, d.date2 || "", d.time, d.payment === "paypal" ? "PayPal" : "当日払い", d.parking, (d.breakdown ? "[内訳] " + d.breakdown + "\n" : "") + (d.note || ""),
     d.ref || "", referralFee, payStatus, "", "", "", ""
   ]);
   const row = sh.getLastRow();
@@ -114,7 +114,7 @@ function handleBooking_(d) {
     "ありがとうエアコンお掃除専門店です。読者限定キャンペーンのご予約を受け付けました。", "",
     "受付番号：" + id,
     "エアコン台数：" + d.units + "台（うちお掃除機能付き " + d.auto_units + "台）",
-    "3点セット：" + (d.set3 == 1 ? "あり" : "なし"),
+    "内訳：" + (d.breakdown || ("3点セット " + (d.set3 == 1 ? "あり" : "なし"))),
     "合計：" + Number(d.total).toLocaleString("ja-JP") + "円（税込・駐車場代別）",
     "作業希望日：第1希望 " + d.date1 + (d.date2 ? " ／ 第2希望 " + d.date2 : "") + "（" + d.time + "）",
     "お支払い：" + (d.payment === "paypal" ? "PayPal請求書（別メールでお送りします）" : "作業当日"), "",
@@ -168,13 +168,15 @@ function paypalToken_() {
 
 function createAndSendPayPalInvoice_(d, id) {
   const token = paypalToken_();
-  const items = [];
-  const units = Number(d.units), auto = Number(d.auto_units);
-  if (units > 0) items.push({ name: "エアコンクリーニング（読者限定 1台目）", quantity: "1", unit_amount: { currency_code: "JPY", value: "6000" } });
-  if (units > 1) items.push({ name: "エアコンクリーニング（2台目以降）", quantity: String(units - 1), unit_amount: { currency_code: "JPY", value: "5000" } });
-  if (auto > 0) items.push({ name: "お掃除機能付き加算", quantity: String(auto), unit_amount: { currency_code: "JPY", value: "5000" } });
-  if (d.set3 == 1) items.push({ name: "3点セット（ドレンホース洗浄・除菌抗菌コート・室外機清掃）", quantity: String(units),
-    unit_amount: { currency_code: "JPY", value: String(Math.round((Number(d.total) - (units > 0 ? 6000 + (units - 1) * 5000 : 0) - auto * 5000) / Math.max(units, 1))) } });
+  let items = [];
+  if (Array.isArray(d.items) && d.items.length) {
+    items = d.items.map(it => ({ name: String(it.name), quantity: String(it.qty), unit_amount: { currency_code: "JPY", value: String(Math.round(Number(it.unit))) } }));
+  } else {
+    const units = Number(d.units), auto = Number(d.auto_units);
+    if (units > 0) items.push({ name: "エアコンクリーニング（読者限定 1台目）", quantity: "1", unit_amount: { currency_code: "JPY", value: "6000" } });
+    if (units > 1) items.push({ name: "エアコンクリーニング（2台目以降）", quantity: String(units - 1), unit_amount: { currency_code: "JPY", value: "5000" } });
+    if (auto > 0) items.push({ name: "お掃除機能付き加算", quantity: String(auto), unit_amount: { currency_code: "JPY", value: "5000" } });
+  }
 
   const body = {
     detail: {
