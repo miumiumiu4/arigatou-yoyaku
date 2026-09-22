@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>読者限定 エアコンクリーニング予約｜ありがとうエアコンお掃除専門店</title>
+<meta name="description" content="メルマガ読者限定。エアコンクリーニング1台6,000円（通常8,900円）。9月30日までのご予約、作業は10〜11月。">
+<style>
+  :root{
+    --bg:#f7f9fb; --card:#ffffff; --ink:#1d2b36; --muted:#5f6f7c; --line:#dfe6ec;
+    --accent:#1f8a70; --accent-ink:#ffffff; --warn:#b4532a; --soft:#e8f5f0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;line-height:1.7}
+  .wrap{max-width:720px;margin:0 auto;padding:24px 16px 80px}
+  header{margin-bottom:20px}
+  .badge{display:inline-block;background:var(--soft);color:var(--accent);font-weight:700;padding:4px 12px;border-radius:999px;font-size:13px}
+  h1{font-size:24px;margin:10px 0 6px;line-height:1.35}
+  .lead{color:var(--muted);margin:0}
+  .price{display:flex;align-items:baseline;gap:12px;margin:16px 0;flex-wrap:wrap}
+  .price .old{color:var(--muted);text-decoration:line-through;font-size:16px}
+  .price .new{font-size:36px;font-weight:800;color:var(--accent)}
+  .price .off{background:var(--accent);color:#fff;border-radius:6px;padding:2px 8px;font-size:13px;font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+  .card h2{font-size:17px;margin:0 0 12px;padding-bottom:8px;border-bottom:2px solid var(--soft)}
+  ul.cond{margin:0;padding-left:20px}
+  label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}
+  label small{font-weight:400;color:var(--muted)}
+  input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],select,textarea{
+    width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:#fff;color:var(--ink)}
+  textarea{min-height:90px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:520px){.row{grid-template-columns:1fr}}
+  .check{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:10px;margin-top:8px;cursor:pointer}
+  .check input{margin-top:5px;width:18px;height:18px}
+  .check b{display:block}
+  .check span{color:var(--muted);font-size:13px}
+  .total{background:var(--soft);border-radius:12px;padding:16px;margin-top:16px}
+  .total table{width:100%;border-collapse:collapse;font-size:14px}
+  .total td{padding:4px 0}
+  .total td:last-child{text-align:right;white-space:nowrap}
+  .total .sum td{font-size:20px;font-weight:800;border-top:1px solid #c9e3da;padding-top:8px}
+  .btn{display:block;width:100%;background:var(--accent);color:var(--accent-ink);border:0;border-radius:12px;padding:16px;font-size:18px;font-weight:800;cursor:pointer;margin-top:18px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .note{font-size:13px;color:var(--muted)}
+  .ref{background:#fff8e6;border:1px solid #f2dfa8;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:8px}
+  .msg{display:none;padding:16px;border-radius:12px;margin-top:16px}
+  .msg.ok{display:block;background:var(--soft);color:var(--accent)}
+  .msg.ng{display:block;background:#fbe9e2;color:var(--warn)}
+  .closed{background:#fbe9e2;color:var(--warn);padding:16px;border-radius:12px;font-weight:700}
+  footer{margin-top:30px;font-size:13px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="badge">メルマガ読者限定</span>
+  <h1>エアコンクリーニング<br>読者限定価格でご予約</h1>
+  <p class="lead">ありがとうエアコンお掃除専門店</p>
+  <div class="price">
+    <span class="old">通常 8,900円</span>
+    <span class="new">6,000円<small style="font-size:14px;font-weight:400">/1台・税込</small></span>
+    <span class="off">約33%OFF</span>
+  </div>
+</header>
+
+<div class="card">
+  <h2>ご予約の条件</h2>
+  <ul class="cond">
+    <li><b>9月30日まで</b>にこのページからご予約</li>
+    <li>作業日は<b>10月または11月</b>（12月は大掃除繁忙期のためお受けできません）</li>
+    <li>2台目以降は1台 <b>5,000円</b>／お掃除機能付きは1台あたり <b>＋5,000円</b></li>
+    <li>料金はすべて税込。駐車場代は別途実費</li>
+    <li>対応エリア：関東・中部地方・関西・九州・仙台</li>
+  </ul>
+</div>
+
+<div id="closed" class="closed" style="display:none">今回の読者限定予約は9月30日で終了しました。ありがとうございました。</div>
+
+<form id="f" class="card">
+  <h2>ご予約フォーム</h2>
+  <div id="refbox" class="ref" style="display:none">ご紹介コード：<b id="refshow"></b>（紹介者様に20%の紹介料をお支払いします）</div>
+
+  <div class="row">
+    <div><label>お名前 <small>必須</small></label><input type="text" name="name" required autocomplete="name"></div>
+    <div><label>電話番号 <small>必須</small></label><input type="tel" name="phone" required autocomplete="tel"></div>
+  </div>
+  <label>メールアドレス <small>必須（PayPal請求書の送付先）</small></label>
+  <input type="email" name="email" required autocomplete="email">
+
+  <div class="row">
+    <div><label>エリア <small>必須</small></label>
+      <select name="area" required>
+        <option value="">選択してください</option>
+        <option>関東</option><option>中部地方</option><option>関西</option><option>九州</option><option>仙台</option>
+      </select></div>
+    <div><label>郵便番号</label><input type="text" name="zip" inputmode="numeric" autocomplete="postal-code"></div>
+  </div>
+  <label>ご住所 <small>必須</small></label>
+  <input type="text" name="address" required autocomplete="street-address">
+
+  <div class="row">
+    <div><label>通常エアコン台数 <small>1台目6,000円／2台目〜5,000円</small></label>
+      <input type="number" name="units" min="0" max="20" value="1" required></div>
+    <div><label>うち、お掃除機能付き台数 <small>＋5,000円/台</small></label>
+      <input type="number" name="auto_units" min="0" max="20" value="0" required></div>
+  </div>
+
+  <label>オプション</label>
+  <label class="check"><input type="checkbox" name="set3" value="1">
+    <div><b>3点セット（ドレンホース洗浄・除菌抗菌コート・室外機清掃）</b>
+    <span>別々にご依頼いただくと約10,000円のセット。1台あたり <b id="set3price"></b>円</span></div></label>
+
+  <div class="row">
+    <div><label>作業希望日 第1希望 <small>10/1〜11/30</small></label><input type="date" name="date1" min="2026-10-01" max="2026-11-30" required></div>
+    <div><label>第2希望</label><input type="date" name="date2" min="2026-10-01" max="2026-11-30"></div>
+  </div>
+  <label>希望時間帯</label>
+  <select name="time"><option>午前</option><option>午後</option><option>どちらでも</option></select>
+
+  <label>お支払い方法</label>
+  <select name="payment">
+    <option value="paypal">PayPal請求書（メールで届きます）</option>
+    <option value="onsite">作業当日にお支払い</option>
+  </select>
+
+  <label>駐車場 <small>駐車場代は別途実費です</small></label>
+  <select name="parking"><option>敷地内に駐車可</option><option>近隣コインパーキング利用</option><option>相談したい</option></select>
+
+  <label>ご要望・備考</label>
+  <textarea name="note" placeholder="エアコンの設置場所、メーカー、気になる症状など"></textarea>
+
+  <input type="hidden" name="ref" id="ref">
+  <input type="hidden" name="campaign" value="mailmag_2026_09">
+
+  <div class="total">
+    <table>
+      <tr><td>エアコンクリーニング</td><td id="t_base">—</td></tr>
+      <tr><td>お掃除機能付き加算</td><td id="t_auto">—</td></tr>
+      <tr><td>3点セット</td><td id="t_set">—</td></tr>
+      <tr class="sum"><td>合計（税込・駐車場代別）</td><td id="t_sum">—</td></tr>
+    </table>
+    <p class="note" style="margin:8px 0 0">参考：通常価格なら <span id="t_normal">—</span>。差額 <span id="t_diff">—</span> お得です。</p>
+  </div>
+
+  <button class="btn" id="submit" type="submit">この内容で予約する</button>
+  <p class="note">送信後、確認メールをお送りします。PayPalをお選びの方には、請求書メールが自動で届きます。</p>
+  <div id="msg" class="msg"></div>
+</form>
+
+<footer>ありがとうエアコンお掃除専門店 ☎ 080-4177-2272<br>© エイムポイント合同会社</footer>
+</div>
+
+<script>
+/* ====== 設定（ここだけ書き換えればOK） ====== */
+const CONFIG = {
+  GAS_URL: "https://script.google.com/macros/s/AKfycbwzgjuZ_AdGByWhWuv4gSnQKBHVK3w96mrUbkED4ReAyFZIO9F-EZW8rECuwYMSxKlV/exec",   // 例: https://script.google.com/macros/s/xxxx/exec
+  PRICE_FIRST: 6000,      // 1台目
+  PRICE_ADDITIONAL: 5000, // 2台目以降
+  PRICE_AUTO: 5000,       // お掃除機能付き加算
+  PRICE_SET3: 9000,       // 3点セット 1台あたり（HPの正規料金に合わせて修正）
+  NORMAL_PRICE: 8900,     // 通常価格（紹介料計算の基準）
+  DEADLINE: "2026-09-30T23:59:59+09:00"
+};
+/* ========================================== */
+
+const yen = n => n.toLocaleString("ja-JP") + "円";
+const f = document.getElementById("f");
+document.getElementById("set3price").textContent = CONFIG.PRICE_SET3.toLocaleString("ja-JP");
+
+// 紹介コード（?ref=xxxx）
+const ref = new URLSearchParams(location.search).get("ref") || "";
+if (ref) { document.getElementById("ref").value = ref; document.getElementById("refshow").textContent = ref; document.getElementById("refbox").style.display = "block"; }
+
+// 締切
+if (new Date() > new Date(CONFIG.DEADLINE)) { document.getElementById("closed").style.display = "block"; f.style.display = "none"; }
+
+function calc(){
+  const u = Math.max(0, +f.units.value || 0);
+  const a = Math.min(u, Math.max(0, +f.auto_units.value || 0));
+  const set = f.set3.checked;
+  const base = u === 0 ? 0 : CONFIG.PRICE_FIRST + (u-1)*CONFIG.PRICE_ADDITIONAL;
+  const auto = a*CONFIG.PRICE_AUTO;
+  const s3 = set ? u*CONFIG.PRICE_SET3 : 0;
+  const sum = base+auto+s3;
+  const normal = u*CONFIG.NORMAL_PRICE + auto + s3;
+  document.getElementById("t_base").textContent = yen(base);
+  document.getElementById("t_auto").textContent = yen(auto);
+  document.getElementById("t_set").textContent = yen(s3);
+  document.getElementById("t_sum").textContent = yen(sum);
+  document.getElementById("t_normal").textContent = yen(normal);
+  document.getElementById("t_diff").textContent = yen(normal-sum);
+  return {units:u, auto_units:a, set3:set?1:0, total:sum, normal_total:normal};
+}
+f.addEventListener("input", calc); calc();
+
+f.addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = document.getElementById("submit"), msg = document.getElementById("msg");
+  const data = Object.fromEntries(new FormData(f).entries());
+  Object.assign(data, calc(), {submitted_at: new Date().toISOString(), page: location.href});
+  if (data.units < 1) { msg.className="msg ng"; msg.textContent="エアコン台数を1台以上にしてください。"; return; }
+  btn.disabled = true; btn.textContent = "送信中…";
+  try {
+    const r = await fetch(CONFIG.GAS_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(data) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || "送信に失敗しました");
+    msg.className="msg ok";
+    msg.innerHTML = "ご予約を受け付けました（受付番号：<b>"+j.id+"</b>）。確認メールをお送りしました。" + (data.payment==="paypal" ? "PayPalの請求書メールも届きますのでご確認ください。" : "");
+    f.reset(); calc(); btn.textContent = "送信済み";
+  } catch(err) {
+    msg.className="msg ng"; msg.textContent = "送信できませんでした。お手数ですが ☎080-4177-2272 までご連絡ください。（"+err.message+"）";
+    btn.disabled=false; btn.textContent="この内容で予約する";
+  }
+});
+</script>
+</body>
+</html>
