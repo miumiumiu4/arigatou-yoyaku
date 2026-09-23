@@ -9,7 +9,7 @@
  *       PAYPAL_CLIENT_ID / PAYPAL_SECRET / PAYPAL_ENV (sandbox または live)
  *       NOTIFY_EMAIL（予約通知を受け取る自分のメール）
  *  4. デプロイ → 新しいデプロイ → ウェブアプリ（実行ユーザー：自分、アクセス：全員）
- *     → URL を index.html / recruit.html の CONFIG.GAS_URL に貼る
+ *     → URL を index.html（および募集ページ arigatou-recruit の index.html）の CONFIG.GAS_URL に貼る
  *  5. トリガー → checkPayPalPayments を「時間主導型・1時間おき」で登録（入金の自動反映）
  */
 

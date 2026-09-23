@@ -1,4 +1,4 @@
-# 読者限定キャンペーン 予約サイト・募集サイト セットアップ手順
+# 読者限定キャンペーン 予約サイト セットアップ手順
 
 例え話でいうと、**GitHub Pages＝看板（お客さんが見るページ）**、**Googleスプレッドシート＝帳簿（予約と紹介料の記録）**、**Apps Script（GAS）＝看板と帳簿をつなぐ受付係**、**PayPal＝集金係** です。
 順番は「帳簿 → 受付係 → 集金係 → 看板」の順に作ると、途中で行き来せずに済みます。
@@ -8,7 +8,7 @@
 | ファイル | 役割 |
 |---|---|
 | `index.html` | 読者限定の予約ページ（金額自動計算・紹介コード対応） |
-| `recruit.html` | 業務委託スタッフ募集ページ（YouTube埋め込み＋面接申込フォーム） |
+| `recruit-site/` | **業務委託スタッフ募集ページ一式（別リポジトリ `arigatou-recruit` で独立公開する用）**。使い方は `recruit-site/README.md` |
 | `Code.gs` | スプレッドシート側の受付プログラム（予約記録・確認メール・PayPal請求書・紹介集計） |
 
 ---
@@ -55,18 +55,17 @@
 1. GitHub右上 **＋ → New repository**
    - Repository name：`arigatou-yoyaku`
    - Public を選択 → **Create repository**
-2. 「uploading an existing file」のリンクをクリック → `index.html` `recruit.html` `README.md` をドラッグ＆ドロップ → **Commit changes**
+2. 「uploading an existing file」のリンクをクリック → `index.html` `README.md` をドラッグ＆ドロップ → **Commit changes**
    （`Code.gs` はスプレッドシート側にも貼り済みなので、バックアップとして置いておきます）
 3. リポジトリの **Settings → Pages**
    - Source：Deploy from a branch ／ Branch：`main` ／ フォルダ：`/ (root)` → Save
 4. 1〜2分待つと、`https://（ユーザー名）.github.io/arigatou-yoyaku/` で公開されます。
    - 予約ページ：`.../arigatou-yoyaku/` または `.../arigatou-yoyaku/index.html`
-   - 募集ページ：`.../arigatou-yoyaku/recruit.html`
+   - 募集ページはこのサイトには含まれません。`recruit-site/` の中身を別リポジトリ `arigatou-recruit` に置いて `https://miumiumiu4.github.io/arigatou-recruit/` で公開します（手順は `recruit-site/README.md`）
 
 ### 貼り替える箇所（必須）
-- `index.html` の `CONFIG.GAS_URL` と `recruit.html` の `CONFIG.GAS_URL` に STEP 1-6 のURLを貼る
+- `index.html` の `CONFIG.GAS_URL` に STEP 1-6 のURLを貼る
 - `index.html` の `CONFIG.PRICE_SET3`（3点セットの1台あたり料金）をHPの正規料金に合わせる
-- `recruit.html` の `【YouTube動画ID】` を実際の動画IDに差し替える
 - GitHub上で編集する場合：ファイルを開く → 鉛筆アイコン → 修正 → Commit changes（数十秒で反映）
 
 ### Claude Codeと連携して今後の修正を任せる場合
@@ -86,8 +85,8 @@ Claude Codeの「リポジトリを選択」で `arigatou-yoyaku` を選べる�
 - 「紹介集計」シートのA列に紹介者コードを追加すると、予約件数・支払済件数・支払うべき紹介料（通常価格の20%、駐車場代除く）が自動集計されます
 - 紹介料は「支払済」の予約だけが対象（未払い・キャンセルは含まれません）
 
-### 面接申込が入ったら
-- 「面接申込」シートに候補日3つが入るので、日程を決めて「面接日確定」列に記入 → 応募者へ連絡
+### 面接申込が入ったら（募集ページ `arigatou-recruit` から）
+- 募集ページの申込も、同じ受付係を通じてこのスプレッドシートの「面接申込」シートに入ります。候補日3つから日程を決めて「面接日確定」列に記入 → 応募者へ連絡
 
 ### 締切
 - `index.html` の `CONFIG.DEADLINE`（2026-09-30 23:59）を過ぎると、フォームが自動で「終了」表示になります

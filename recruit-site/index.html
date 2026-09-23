@@ -117,6 +117,9 @@
   <footer>ありがとうエアコンお掃除専門店 ☎ 080-4177-2272<br>© エイムポイント合同会社</footer>
 </div>
 <script>
+// 面接申込の送信先（Apps Script ウェブアプリのURL）
+// 予約サイトと同じスプレッドシートの「面接申込」シートに記録されます。
+// 募集専用のスプレッドシートに分けたい場合は README.md の STEP 2 を参照。
 const CONFIG = { GAS_URL: "https://script.google.com/macros/s/AKfycbwzgjuZ_AdGByWhWuv4gSnQKBHVK3w96mrUbkED4ReAyFZIO9F-EZW8rECuwYMSxKlV/exec" };
 const f = document.getElementById("f");
 f.addEventListener("submit", async e => {
