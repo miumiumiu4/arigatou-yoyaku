@@ -61,7 +61,7 @@
   - ADMIN_PASSWORD: 私に決めて入力してもらう(あなたは入力しない)
 - ブランチが main ではないため、Project Settings → Git の Production Branch を claude/peaceful-curie-d69wr2 にする(私がmainへマージ済みなら不要。最初に私に確認する)。
 - デプロイして、ビルドが成功することを確認。
-- Settings → Domains に minutes.arigatouosouji.com を追加。Vercelが示すDNSレコード(通常はCNAME)を、Xserverのr DNSレコード設定に追加する。Vercelで Valid Configuration になるまで確認。
+- Settings → Domains に minutes.arigatouosouji.com を追加。Vercelが示すDNSレコード(通常はCNAME)を、XserverのDNSレコード設定に追加する。Vercelで Valid Configuration になるまで確認。
 
 ### 6. Zoom(仕上げ)
 - 手順4のアプリで Event Subscriptions を有効化 → Add Event Subscription:
