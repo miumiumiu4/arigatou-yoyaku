@@ -7,7 +7,7 @@ export default async function Meeting({ params }: { params: { id: string } }) {
   const { data: m } = await db.from("meetings").select("*").eq("id", params.id).single();
   const { data: a } = await db.from("analyses").select("*").eq("meeting_id", params.id).maybeSingle();
   const { data: ds } = a
-    ? await db.from("deliveries").select("status, contacts(name, email)").eq("analysis_id", a.id)
+    ? await db.from("deliveries").select("id, status, error, contacts(name, email)").eq("analysis_id", a.id)
     : { data: [] as any[] };
   if (!m) return <p>見つかりません</p>;
   return (
@@ -32,7 +32,12 @@ export default async function Meeting({ params }: { params: { id: string } }) {
           <ul>
             {(ds ?? []).map((d: any, i: number) => (
               <li key={i}>
-                {d.contacts?.name} ({d.contacts?.email ?? "メール未登録"}) — {d.status === "waiting_email" ? (d.contacts?.email ? "承認待ち" : "住所待ち") : d.status}
+                {d.contacts?.name} ({d.contacts?.email ?? "メール未登録"}) — {d.status === "waiting_email" ? (d.contacts?.email ? "送信待ち" : "住所待ち") : d.status}
+                {d.status === "failed" && (
+                  <form action={`/api/deliveries/${d.id}/retry`} method="post" style={{ display: "inline", marginLeft: 8 }}>
+                    <small style={{ color: "crimson" }}>{d.error}</small> <button>再送</button>
+                  </form>
+                )}
               </li>
             ))}
           </ul>

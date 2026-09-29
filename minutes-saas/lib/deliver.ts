@@ -1,12 +1,13 @@
 import { db } from "./db";
 import { sendMail, esc } from "./mail";
 
-/** 承認済みの分析のうち、email があり未送信の配信を送る(contact指定で絞り込み可) */
-export async function flushDeliveries(opts: { analysisId?: string; contactId?: string } = {}) {
+/** 承認済みの分析のうち、email があり未送信の配信を送る(analysis/contact/delivery 指定で絞り込み可) */
+export async function flushDeliveries(opts: { analysisId?: string; contactId?: string; deliveryId?: string } = {}) {
   let q = db
     .from("deliveries")
     .select("id, analysis_id, contacts(name, email), analyses(id, content, approved_at, meetings(topic))")
-    .eq("status", "waiting_email");
+    .in("status", opts.deliveryId ? ["waiting_email", "failed"] : ["waiting_email"]); // failed は手動再送のときだけ
+  if (opts.deliveryId) q = q.eq("id", opts.deliveryId);
   if (opts.analysisId) q = q.eq("analysis_id", opts.analysisId);
   if (opts.contactId) q = q.eq("contact_id", opts.contactId);
   const { data, error } = await q;
