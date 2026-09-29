@@ -30,6 +30,8 @@ Zoom(文字起こし完了) → /api/zoom/webhook → 清書(全文) → DB
 
 - 分析不要にした会議は、全文の保存だけ行い、分析ボタンを出しません(分析済みの会議では切り替え不可)。
 - 既存DBには `alter table meetings add column skip_analysis boolean not null default false;` を実行してください。
+- 分析テンプレートは `/templates` で作成・編集・既定の切替ができ、「分析する」時に会議ごとに選べます(既定は消せません)。
+- 既存DBには `templates` テーブルと `analyses.template_id` の追加が必要です(`schema.sql` の該当部分を参照)。
 
 ## 次の段階
-分析テンプレートの切替、失敗配信の再送ボタン。
+「録画なし会議は自動で分析不要」などの自動判定ルール、相手ごとの配信可否設定。

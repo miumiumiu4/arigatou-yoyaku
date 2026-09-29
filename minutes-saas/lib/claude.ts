@@ -36,10 +36,14 @@ export async function polishTranscript(raw: string) {
   return out.join("\n");
 }
 
-export async function analyzeTranscript(clean: string, topic: string) {
+export const DEFAULT_INSTRUCTIONS =
+  "構成: 1.論点の整理 2.相手の課題・要望 3.決まったこと 4.次のアクション(担当・期限つき) 5.所感と提案。";
+
+/** instructions はテンプレートごとの観点・構成。共通ルール(相手に渡す前提・推測禁止)は常に付く */
+export async function analyzeTranscript(clean: string, topic: string, instructions = DEFAULT_INSTRUCTIONS) {
   const system =
     "あなたは会議分析のアナリストです。相手に渡す前提で、丁寧で読みやすい日本語で書いてください。" +
-    "構成: 1.論点の整理 2.相手の課題・要望 3.決まったこと 4.次のアクション(担当・期限つき) 5.所感と提案。" +
-    "本文に無いことは推測で書かないでください。";
+    "本文に無いことは推測で書かないでください。\n" +
+    instructions;
   return ask(system, `会議名: ${topic}\n\n${clean}`);
 }

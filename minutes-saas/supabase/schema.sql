@@ -28,11 +28,25 @@ create table meeting_participants (
   primary key (meeting_id, contact_id)
 );
 
+-- 分析テンプレート(どんな観点・構成で分析するか)
+create table templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  instructions text not null,
+  is_default boolean not null default false,
+  created_at timestamptz default now()
+);
+create unique index templates_default_idx on templates (is_default) where is_default;
+insert into templates (name, instructions, is_default) values
+  ('標準', '構成: 1.論点の整理 2.相手の課題・要望 3.決まったこと 4.次のアクション(担当・期限つき) 5.所感と提案。', true),
+  ('営業商談', '構成: 1.相手の現状と課題 2.購買意欲と決裁の状況 3.懸念・反論とその対応 4.次のステップ(担当・期限つき) 5.提案の方向性。', false);
+
 -- 分析結果(1会議1件)
 create table analyses (
   id uuid primary key default gen_random_uuid(),
   meeting_id uuid unique references meetings on delete cascade,
   content text not null,
+  template_id uuid references templates on delete set null,
   approved_at timestamptz,
   created_at timestamptz default now()
 );
@@ -57,6 +71,7 @@ create table login_tokens (
   created_at timestamptz default now()
 );
 
+alter table templates enable row level security;
 alter table login_tokens enable row level security;
 alter table contacts enable row level security;
 alter table meetings enable row level security;

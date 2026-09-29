@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 
 export default async function Meeting({ params }: { params: { id: string } }) {
   const { data: m } = await db.from("meetings").select("*").eq("id", params.id).single();
-  const { data: a } = await db.from("analyses").select("*").eq("meeting_id", params.id).maybeSingle();
+  const { data: templates } = await db.from("templates").select("id, name, is_default").order("created_at");
+  const { data: a } = await db.from("analyses").select("*, templates(name)").eq("meeting_id", params.id).maybeSingle();
   const { data: ds } = a
     ? await db.from("deliveries").select("id, status, error, contacts(name, email)").eq("analysis_id", a.id)
     : { data: [] as any[] };
@@ -18,6 +19,12 @@ export default async function Meeting({ params }: { params: { id: string } }) {
       {!a && m.skip_analysis && <p>この会議は「分析不要」です(全文の保存のみ)。</p>}
       {!a && !m.skip_analysis && (
         <form action={`/api/meetings/${m.id}/analyze`} method="post">
+          テンプレート:{" "}
+          <select name="template_id" defaultValue={(templates ?? []).find((t) => t.is_default)?.id}>
+            {(templates ?? []).map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>{" "}
           <button>分析する</button>
         </form>
       )}
@@ -27,6 +34,7 @@ export default async function Meeting({ params }: { params: { id: string } }) {
           <button>{m.skip_analysis ? "分析不要を解除" : "分析不要にする"}</button>
         </form>
       )}
+      {a && <p><small>テンプレート: {(a as any).templates?.name ?? "(削除済み)"}</small></p>}
       {a && (
         <form action={`/api/meetings/${m.id}/approve`} method="post">
           <textarea name="content" defaultValue={a.content} rows={20} style={{ width: "100%" }} />

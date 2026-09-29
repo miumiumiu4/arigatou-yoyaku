@@ -10,6 +10,7 @@ export default async function Home() {
   return (
     <main>
       <h1>議事録の金庫</h1>
+      <p><Link href="/templates">分析テンプレートの管理</Link></p>
       <h2>会議</h2>
       <ul>
         {(meetings ?? []).map((m) => (
