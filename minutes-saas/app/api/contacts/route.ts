@@ -10,7 +10,8 @@ export async function POST(req: NextRequest) {
   const id = String(form.get("id"));
   const email = String(form.get("email") ?? "").trim();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return new NextResponse("invalid email", { status: 400 });
-  await db.from("contacts").update({ email }).eq("id", id);
+  const { error } = await db.from("contacts").update({ email }).eq("id", id);
+  if (error) return new NextResponse("このメールアドレスは既に別の相手で使われています", { status: 409 });
   await flushDeliveries({ contactId: id });
   return NextResponse.redirect(new URL("/", req.url), 303);
 }

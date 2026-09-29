@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// 相手用(/r/*)とZoomウェブフックは公開。それ以外は自分用なのでBasic認証
+// 相手用(/login,/my,ログインAPI)とZoomウェブフックは公開(相手側は独自セッションで保護)。それ以外は自分用なのでBasic認証
+const PUBLIC = ["/login", "/my", "/api/login", "/api/logout"];
 export function middleware(req: NextRequest) {
   const p = req.nextUrl.pathname;
-  if (p.startsWith("/r/") || p === "/api/zoom/webhook") return NextResponse.next();
+  if (p === "/api/zoom/webhook" || PUBLIC.some((x) => p === x || p.startsWith(x + "/"))) return NextResponse.next();
   const auth = req.headers.get("authorization") ?? "";
   const [scheme, cred] = auth.split(" ");
   if (scheme === "Basic" && cred && process.env.ADMIN_PASSWORD) {
