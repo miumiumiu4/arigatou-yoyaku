@@ -15,9 +15,16 @@ export default async function Meeting({ params }: { params: { id: string } }) {
       <Link href="/">← 一覧</Link>
       <h1>{m.topic}</h1>
       <h2>分析</h2>
-      {!a && (
+      {!a && m.skip_analysis && <p>この会議は「分析不要」です(全文の保存のみ)。</p>}
+      {!a && !m.skip_analysis && (
         <form action={`/api/meetings/${m.id}/analyze`} method="post">
           <button>分析する</button>
+        </form>
+      )}
+      {!a && (
+        <form action={`/api/meetings/${m.id}/skip`} method="post">
+          <input type="hidden" name="skip" value={m.skip_analysis ? "0" : "1"} />
+          <button>{m.skip_analysis ? "分析不要を解除" : "分析不要にする"}</button>
         </form>
       )}
       {a && (

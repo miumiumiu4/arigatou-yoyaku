@@ -28,5 +28,8 @@ Zoom(文字起こし完了) → /api/zoom/webhook → 清書(全文) → DB
 - 自分用画面は Basic 認証(`ADMIN_USER`/`ADMIN_PASSWORD`)。本番では必ず設定してください。
 - 長い会議は Vercel の実行時間制限に注意（`maxDuration`）。必要ならキュー化します。
 
+- 分析不要にした会議は、全文の保存だけ行い、分析ボタンを出しません(分析済みの会議では切り替え不可)。
+- 既存DBには `alter table meetings add column skip_analysis boolean not null default false;` を実行してください。
+
 ## 次の段階
-分析テンプレートの切替、会議ごとの「分析不要」フラグ、失敗配信の再送ボタン。
+分析テンプレートの切替、失敗配信の再送ボタン。

@@ -18,6 +18,7 @@ create table meetings (
   transcript_raw text,
   transcript_clean text,     -- 要約ではなく全文の清書
   status text not null default 'stored', -- stored / analyzed / approved
+  skip_analysis boolean not null default false, -- 分析不要(全文保存のみ)
   created_at timestamptz default now()
 );
 

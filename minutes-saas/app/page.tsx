@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const { data: meetings } = await db.from("meetings").select("id, topic, started_at, status").order("started_at", { ascending: false });
+  const { data: meetings } = await db.from("meetings").select("id, topic, started_at, status, skip_analysis").order("started_at", { ascending: false });
   const { data: contacts } = await db.from("contacts").select("id, name, email").order("created_at", { ascending: false });
   const missing = (contacts ?? []).filter((c) => !c.email);
   return (
@@ -14,7 +14,7 @@ export default async function Home() {
       <ul>
         {(meetings ?? []).map((m) => (
           <li key={m.id}>
-            <Link href={`/meetings/${m.id}`}>{m.topic ?? "(無題)"}</Link> — {m.started_at?.slice(0, 10)} [{m.status}]
+            <Link href={`/meetings/${m.id}`}>{m.topic ?? "(無題)"}</Link> — {m.started_at?.slice(0, 10)} [{m.skip_analysis ? "分析不要" : m.status}]
           </li>
         ))}
       </ul>
