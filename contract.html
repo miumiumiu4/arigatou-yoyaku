@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>かんたん電子契約</title>
+<style>
+  :root{--bg:#fffaf5;--card:#fff;--ink:#2b2420;--muted:#7a6b62;--line:#f0e2d6;--or:#f26b1d;--or-soft:#fff1e6;--green:#1f8a70;--green-soft:#e8f5f0;--warn:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;line-height:1.7}
+  header{background:linear-gradient(135deg,#f26b1d,#ff9a3c);color:#fff;padding:22px 16px;text-align:center}
+  header h1{margin:0;font-size:22px} header p{margin:4px 0 0;font-size:13px;opacity:.95}
+  main{max-width:720px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .card h2{margin:0 0 12px;font-size:17px}
+  label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px}
+  input,select,textarea{width:100%;padding:10px;border:1px solid #e3d3c5;border-radius:8px;font:inherit;background:#fff}
+  textarea{min-height:90px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media(max-width:520px){.row{grid-template-columns:1fr}}
+  button{border:0;border-radius:10px;padding:13px 18px;font:inherit;font-weight:700;cursor:pointer}
+  .primary{background:var(--or);color:#fff;width:100%;font-size:16px;margin-top:8px} .primary:disabled{opacity:.5}
+  .ghost{background:var(--or-soft);color:var(--or)}
+  .contract{white-space:pre-wrap;background:#fdfbf8;border:1px solid var(--line);border-radius:10px;padding:14px;font-size:14px;max-height:420px;overflow:auto}
+  canvas{width:100%;height:170px;border:2px dashed #e3b997;border-radius:10px;background:#fff;touch-action:none;display:block}
+  .note{font-size:12px;color:var(--muted)} .err{color:var(--warn);font-weight:600;margin-top:10px;display:none}
+  .ok{background:var(--green-soft);border:1px solid #bfe3d7;color:#14614f;border-radius:10px;padding:14px}
+  .hide{display:none} .sigimg{height:70px;border-bottom:1px solid #333}
+  .chk{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:14px} .chk input{width:auto;margin-top:6px}
+  code{background:#f6ece2;padding:2px 6px;border-radius:4px;word-break:break-all}
+</style>
+</head>
+<body>
+<header><h1>かんたん電子契約</h1><p>契約書を作る → 手書きでサイン → 相手にURLを送る、だけ</p></header>
+<main>
+
+<!-- ============ 作成モード（甲） ============ -->
+<section id="create">
+  <div class="card">
+    <h2>① 契約書の種類を選ぶ</h2>
+    <p class="note">例えるなら「契約書のひな形帳」から1枚選ぶ作業です。</p>
+    <select id="tpl"></select>
+    <div id="fields"></div>
+  </div>
+
+  <div class="card">
+    <h2>② 当事者</h2>
+    <div class="row">
+      <div><label>甲（あなた）の氏名・会社名</label><input id="aName"></div>
+      <div><label>甲のメール</label><input id="aEmail" type="email"></div>
+      <div><label>乙（相手）の氏名・会社名</label><input id="bName"></div>
+      <div><label>乙のメール（署名URLを送ります）</label><input id="bEmail" type="email"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>③ 契約書のプレビュー</h2>
+    <div class="contract" id="preview"></div>
+  </div>
+
+  <div class="card">
+    <h2>④ 甲の署名</h2>
+    <p class="note">指またはマウスで、下の枠にサインを書いてください。</p>
+    <canvas id="padA"></canvas>
+    <p><button class="ghost" type="button" onclick="clearPad('A')">書き直す</button></p>
+    <label>作成用パスコード（管理者が設定した合言葉）</label>
+    <input id="passcode" type="password" autocomplete="off">
+    <button class="primary" id="btnCreate" type="button">署名して、乙に署名依頼を送る</button>
+    <div class="err" id="errCreate"></div>
+  </div>
+
+  <div class="ok hide" id="doneCreate"></div>
+</section>
+
+<!-- ============ 署名モード（乙） ============ -->
+<section id="sign" class="hide">
+  <div class="card">
+    <h2 id="sTitle"></h2>
+    <p class="note" id="sMeta"></p>
+    <div class="contract" id="sBody"></div>
+    <p class="note">甲の署名：<br><img id="sSigA" class="sigimg" alt=""></p>
+  </div>
+  <div class="card" id="signBox">
+    <h2>乙の署名</h2>
+    <canvas id="padB"></canvas>
+    <p><button class="ghost" type="button" onclick="clearPad('B')">書き直す</button></p>
+    <label class="chk"><input type="checkbox" id="agree"><span>上記の契約内容を確認し、内容に同意します。</span></label>
+    <button class="primary" id="btnSign" type="button">同意して署名する</button>
+    <div class="err" id="errSign"></div>
+  </div>
+  <div class="ok hide" id="doneSign"></div>
+</section>
+<div class="ok hide" id="fatal"></div>
+
+<p class="note">※本サービスは簡易的な合意記録用です。署名日時・メールアドレス・本文ハッシュを記録し、署名済PDFを保管します。高額・重要な契約は専門家にご相談ください。</p>
+</main>
+
+<script>
+const CONFIG = {
+  // README の手順で発行した Apps Script ウェブアプリURL（index.html と同じもの）
+  GAS_URL: "https://script.google.com/macros/s/AKfycbwzgjuZ_AdGByWhWuv4gSnQKBHVK3w96mrUbkED4ReAyFZIO9F-EZW8rECuwYMSxKlV/exec"
+};
+
+/* ---------- 契約書テンプレート ---------- */
+const today = () => { const d = new Date(); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; };
+const TEMPLATES = {
+  gyomu: {
+    name: "業務委託契約書",
+    fields: [
+      {k:"work", l:"委託する業務内容", t:"textarea", d:"エアコンのお掃除作業"},
+      {k:"fee", l:"報酬（税込・円）", t:"number", d:"10000"},
+      {k:"pay", l:"支払方法・期日", d:"業務完了月の翌月末日までに銀行振込"},
+      {k:"from", l:"契約開始日", t:"date"}, {k:"to", l:"契約終了日", t:"date"}
+    ],
+    build: (v,a,b) => `${a}（以下「甲」）と${b}（以下「乙」）は、次のとおり業務委託契約を締結する。
+
+第1条（委託業務）
+甲は乙に対し、次の業務を委託し、乙はこれを受託する。
+${v.work}
+
+第2条（契約期間）
+${v.from||"　　"}から${v.to||"　　"}までとする。
+
+第3条（報酬）
+甲は乙に対し、報酬として金${Number(v.fee||0).toLocaleString()}円（税込）を支払う。支払方法・期日は「${v.pay}」とする。
+
+第4条（再委託の禁止）
+乙は、甲の書面または電磁的方法による承諾なく、業務を第三者に再委託してはならない。
+
+第5条（秘密保持）
+乙は、業務上知り得た甲および甲の顧客の情報を第三者に漏らしてはならない。契約終了後も同様とする。
+
+第6条（契約の解除）
+いずれかの当事者が本契約に違反したときは、相手方は催告のうえ本契約を解除できる。
+
+第7条（協議・管轄）
+本契約に定めのない事項は、甲乙誠意をもって協議する。紛争が生じた場合は、甲の所在地を管轄する裁判所を第一審の専属的合意管轄裁判所とする。
+
+本契約の成立を証するため、電子署名により締結する。
+${today()}`
+  },
+  nda: {
+    name: "秘密保持契約書（NDA）",
+    fields: [
+      {k:"purpose", l:"情報を開示する目的", t:"textarea", d:"業務提携の検討"},
+      {k:"years", l:"秘密保持の有効期間（年）", t:"number", d:"2"}
+    ],
+    build: (v,a,b) => `${a}（以下「甲」）と${b}（以下「乙」）は、${v.purpose}（以下「本目的」）のために相互に開示する情報の取扱いについて、次のとおり契約する。
+
+第1条（秘密情報）
+本契約における秘密情報とは、本目的のために一方の当事者が他方に開示した技術上・営業上その他一切の情報をいう。ただし、公知の情報、開示前から保有していた情報、正当に第三者から取得した情報を除く。
+
+第2条（義務）
+受領者は、秘密情報を本目的以外に使用せず、相手方の事前の承諾なく第三者に開示してはならない。
+
+第3条（返還・廃棄）
+受領者は、相手方から求められたときは、秘密情報（複製物を含む）を速やかに返還または廃棄する。
+
+第4条（有効期間）
+本契約は締結日から${v.years}年間有効とする。秘密保持義務は、有効期間満了後もさらに${v.years}年間存続する。
+
+第5条（損害賠償）
+本契約に違反して相手方に損害を与えたときは、その損害を賠償する。
+
+第6条（管轄）
+本契約に関する紛争は、甲の所在地を管轄する裁判所を第一審の専属的合意管轄裁判所とする。
+
+本契約の成立を証するため、電子署名により締結する。
+${today()}`
+  },
+  baibai: {
+    name: "売買契約書",
+    fields: [
+      {k:"item", l:"目的物", t:"textarea", d:""},
+      {k:"price", l:"代金（税込・円）", t:"number", d:""},
+      {k:"delivery", l:"引渡日", t:"date"},
+      {k:"pay", l:"支払方法・期日", d:"引渡し後7日以内に銀行振込"}
+    ],
+    build: (v,a,b) => `売主${a}（以下「甲」）と買主${b}（以下「乙」）は、次のとおり売買契約を締結する。
+
+第1条（売買）
+甲は乙に対し、次の物品（以下「目的物」）を売り渡し、乙はこれを買い受ける。
+${v.item}
+
+第2条（代金）
+代金は金${Number(v.price||0).toLocaleString()}円（税込）とし、乙は「${v.pay}」により甲に支払う。
+
+第3条（引渡し）
+甲は乙に対し、${v.delivery||"　　"}までに目的物を引き渡す。所有権は代金完済時に乙へ移転する。
+
+第4条（契約不適合）
+引渡し後に目的物が契約の内容に適合しないことが判明したときは、乙は速やかに甲へ通知し、甲は修補・代替品の引渡し等の対応を行う。
+
+第5条（解除）
+いずれかの当事者が本契約に違反したときは、相手方は催告のうえ本契約を解除できる。
+
+第6条（管轄）
+本契約に関する紛争は、甲の所在地を管轄する裁判所を第一審の専属的合意管轄裁判所とする。
+
+本契約の成立を証するため、電子署名により締結する。
+${today()}`
+  },
+  gouisho: {
+    name: "簡易合意書（念書）",
+    fields: [{k:"text", l:"合意内容", t:"textarea", d:""}],
+    build: (v,a,b) => `${a}（以下「甲」）と${b}（以下「乙」）は、次のとおり合意する。
+
+【合意内容】
+${v.text}
+
+甲および乙は、上記の内容に誠実に従うものとする。
+本合意の成立を証するため、電子署名により締結する。
+${today()}`
+  }
+};
+
+/* ---------- 共通：署名パッド ---------- */
+const pads = {};
+function initPad(id, key){
+  const c = document.getElementById(id), ctx = c.getContext("2d");
+  const fit = () => { const r = c.getBoundingClientRect(), ratio = window.devicePixelRatio||1;
+    c.width = r.width*ratio; c.height = r.height*ratio; ctx.scale(ratio,ratio);
+    ctx.lineWidth = 2.6; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#111"; };
+  fit();
+  const st = pads[key] = {c, ctx, drawn:false, fit};
+  let down = false;
+  const pos = e => { const r = c.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
+  c.addEventListener("pointerdown", e => { down = true; c.setPointerCapture(e.pointerId); const [x,y]=pos(e); ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+.1,y+.1); ctx.stroke(); st.drawn = true; });
+  c.addEventListener("pointermove", e => { if(!down) return; const [x,y]=pos(e); ctx.lineTo(x,y); ctx.stroke(); });
+  ["pointerup","pointercancel"].forEach(ev => c.addEventListener(ev, () => down = false));
+}
+function clearPad(key){ const p = pads[key]; p.ctx.clearRect(0,0,p.c.width,p.c.height); p.drawn = false; }
+
+async function post(data){
+  const r = await fetch(CONFIG.GAS_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(data)});
+  const j = await r.json(); if(!j.ok) throw new Error(j.error || "エラーが発生しました"); return j;
+}
+const $ = id => document.getElementById(id);
+const showErr = (id, m) => { const e = $(id); e.textContent = m; e.style.display = m ? "block" : "none"; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- 作成モード ---------- */
+function initCreate(){
+  const sel = $("tpl");
+  sel.innerHTML = Object.entries(TEMPLATES).map(([k,t]) => `<option value="${k}">${t.name}</option>`).join("");
+  const render = () => {
+    const t = TEMPLATES[sel.value];
+    $("fields").innerHTML = t.fields.map(f => {
+      const inp = f.t === "textarea" ? `<textarea data-k="${f.k}">${esc(f.d||"")}</textarea>`
+        : `<input data-k="${f.k}" type="${f.t||"text"}" value="${esc(f.d||"")}">`;
+      return `<label>${f.l}</label>${inp}`;
+    }).join("");
+    update();
+  };
+  const values = () => Object.fromEntries([...document.querySelectorAll("#fields [data-k]")].map(e => [e.dataset.k, e.value]));
+  const update = () => { $("preview").textContent = TEMPLATES[sel.value].build(values(), $("aName").value||"（甲）", $("bName").value||"（乙）"); };
+  sel.addEventListener("change", render);
+  document.addEventListener("input", update);
+  render();
+  initPad("padA","A");
+
+  $("btnCreate").onclick = async () => {
+    showErr("errCreate","");
+    if(!$("aName").value || !$("bName").value || !$("aEmail").value || !$("bEmail").value) return showErr("errCreate","当事者の氏名とメールを入力してください");
+    if(!pads.A.drawn) return showErr("errCreate","甲の署名を書いてください");
+    if(!$("passcode").value) return showErr("errCreate","パスコードを入力してください");
+    const btn = $("btnCreate"); btn.disabled = true; btn.textContent = "送信中…";
+    try{
+      const t = TEMPLATES[sel.value];
+      const r = await post({
+        kind:"contract_create", kind2: sel.value, title: t.name, body: $("preview").textContent,
+        aName:$("aName").value, aEmail:$("aEmail").value, bName:$("bName").value, bEmail:$("bEmail").value,
+        aSignature: pads.A.c.toDataURL("image/png"), passcode: $("passcode").value,
+        signBase: location.origin + location.pathname
+      });
+      $("doneCreate").innerHTML = `✅ 署名依頼を送りました（契約ID：${esc(r.id)}）。<br>乙が署名すると、署名済みPDFが双方にメールで届きます。<br>
+        <span class="note">メールが届かない場合は、次のURLを乙に直接送ってください：</span><br><code>${esc(r.signUrl)}</code>`;
+      $("doneCreate").classList.remove("hide"); btn.classList.add("hide"); $("doneCreate").scrollIntoView({behavior:"smooth"});
+    }catch(e){ showErr("errCreate", e.message); btn.disabled = false; btn.textContent = "署名して、乙に署名依頼を送る"; }
+  };
+}
+
+/* ---------- 署名モード ---------- */
+async function initSign(id, t){
+  $("create").classList.add("hide");
+  try{
+    const r = await fetch(`${CONFIG.GAS_URL}?action=contract_get&id=${encodeURIComponent(id)}&t=${encodeURIComponent(t)}`);
+    const j = await r.json(); if(!j.ok) throw new Error(j.error);
+    $("sTitle").textContent = j.title;
+    $("sMeta").textContent = `契約ID：${j.id}／作成：${j.createdAt}／甲：${j.aName}／乙：${j.bName}`;
+    $("sBody").textContent = j.body; $("sSigA").src = j.aSignature;
+    $("sign").classList.remove("hide"); initPad("padB","B");
+    $("btnSign").onclick = async () => {
+      showErr("errSign","");
+      if(!pads.B.drawn) return showErr("errSign","署名を書いてください");
+      if(!$("agree").checked) return showErr("errSign","同意にチェックしてください");
+      const btn = $("btnSign"); btn.disabled = true; btn.textContent = "署名中…（PDF作成に数十秒かかります）";
+      try{
+        await post({kind:"contract_sign", id, t, agree:true, bSignature: pads.B.c.toDataURL("image/png"), userAgent: navigator.userAgent});
+        $("signBox").classList.add("hide");
+        $("doneSign").innerHTML = "✅ 署名が完了しました。署名済みPDFをメールでお送りします。このページは閉じて構いません。";
+        $("doneSign").classList.remove("hide");
+      }catch(e){ showErr("errSign", e.message); btn.disabled = false; btn.textContent = "同意して署名する"; }
+    };
+  }catch(e){ $("sign").classList.add("hide"); $("fatal").textContent = "⚠ " + e.message; $("fatal").classList.remove("hide"); }
+}
+
+const q = new URLSearchParams(location.search);
+if(q.get("id") && q.get("t")) initSign(q.get("id"), q.get("t")); else initCreate();
+</script>
+</body>
+</html>
