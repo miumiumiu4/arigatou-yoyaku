@@ -52,6 +52,8 @@
   svg.draw .o { stroke: var(--orange-chalk); }
 
   /* 下のテロップ */
+  #bw { position: absolute; left: 0; top: 0; width: 1920px; height: 870px; transform-origin: 0 0;
+         transform: translate(173px, 24px) scale(0.82); }
   #caption {
     position: absolute; left: 60px; top: 872px; width: 1800px; height: 168px;
     display: flex; align-items: center; gap: 28px; padding: 0 40px;
@@ -74,6 +76,7 @@
 </head>
 <body>
 <div id="stage">
+  <div id="bw">
   <div id="frame"></div>
   <div id="board"><canvas id="dust" width="1752" height="752"></canvas></div>
   <div id="tray"></div>
@@ -81,6 +84,7 @@
   <div class="chalkpiece" style="left:1590px;width:48px;background:#F4A765"></div>
   <img id="logo" src="__LOGO__">
   <div id="scenes"></div>
+  </div>
   <div id="caption"><div id="who"><span id="whoname"></span><span id="bars"><i></i><i></i><i></i><i></i></span></div><div id="line"></div></div>
 </div>
 
@@ -199,6 +203,8 @@ function setCaption(t) {
     b.style.height = h + 'px';
   });
 }
+__CHARS__
+
 window.seek = function (t) {
   // 場面の切り替え（前の場面を消しながら次を出す）
   sceneNames.forEach((n, i) => {
@@ -214,6 +220,7 @@ window.seek = function (t) {
   });
   items.forEach(it => applyItem(it, t));
   setCaption(t);
+  setCharacters(t);
 };
 window.DURATION = T.duration;
 window.warmup = async function () {

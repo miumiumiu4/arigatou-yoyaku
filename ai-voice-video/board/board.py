@@ -35,6 +35,8 @@ def parse(path):
         raw = raw.strip()
         if raw.startswith("# scene:"):
             scene = raw.split(":", 1)[1].strip()
+        elif raw.startswith("# wait:") and lines:
+            lines[-1]["wait"] = lines[-1].get("wait", 0) + float(raw.split(":", 1)[1])
         elif raw and not raw.startswith("#"):
             spk, direction, text = [x.strip() for x in raw.split("|", 2)]
             lines.append({"spk": spk, "direction": direction, "text": text, "scene": scene})
@@ -62,6 +64,7 @@ def build_audio(lines, wav_path):
         if i + 1 < len(lines):
             nxt = lines[i + 1]
             gap = SCENE_GAP if nxt["scene"] != line["scene"] else SAME_GAP if nxt["spk"] == line["spk"] else SWAP_GAP
+            gap += line.get("wait", 0)
             chunks.append(np.zeros(int(gap * SR), np.float32))
             t += gap
     chunks.append(np.zeros(int(TAIL * SR), np.float32))
@@ -83,7 +86,7 @@ def timeline(lines, duration):
         s = scenes.setdefault(line["scene"], {"start": line["start"], "lines": []})
         s["lines"].append(i)
     return {"duration": round(duration, 3), "scenes": scenes,
-            "lines": [{k: l[k] for k in ("spk", "text", "start", "end", "scene")} for l in lines]}
+            "lines": [{k: l[k] for k in ("spk", "direction", "text", "start", "end", "scene")} for l in lines]}
 
 
 def write_html(tl, out_html, scenes_js):
@@ -92,6 +95,7 @@ def write_html(tl, out_html, scenes_js):
     html = open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
     html = html.replace("__TIMELINE__", json.dumps(tl, ensure_ascii=False)).replace("__LOGO__", logo_uri)
     html = html.replace("__SCENES__", open(scenes_js, encoding="utf-8").read())
+    html = html.replace("__CHARS__", open(os.path.join(HERE, "characters.js"), encoding="utf-8").read())
     with open(out_html, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -120,17 +124,18 @@ def preview(html_path, times, outdir):
         browser.close()
 
 
-def render(html_path, wav_path, duration, fps, mp4_path):
+def render(html_path, wav_path, duration, fps, mp4_path, span=None):
     from playwright.sync_api import sync_playwright
-    n = int(duration * fps)
+    a, b = span if span else (0, duration)   # 一部分だけ書き出す（見本づくり用）
+    n = int((b - a) * fps)
     enc = subprocess.Popen([FFMPEG, "-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", str(fps),
-                            "-c:v", "mjpeg", "-i", "-", "-i", wav_path, "-c:v", "libx264", "-preset", "medium",
+                            "-c:v", "mjpeg", "-i", "-", "-ss", str(a), "-t", str(b - a), "-i", wav_path, "-c:v", "libx264", "-preset", "medium",
                             "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-shortest",
                             mp4_path], stdin=subprocess.PIPE)
     with sync_playwright() as pw:
         browser, page = open_page(pw, html_path)
         for i in range(n):
-            page.evaluate(f"window.seek({i / fps})")
+            page.evaluate(f"window.seek({a + i / fps})")
             enc.stdin.write(page.screenshot(type="jpeg", quality=92))
             if i % (fps * 10) == 0:
                 print(f"  {i / fps:.0f}秒 / {duration:.0f}秒", flush=True)
@@ -145,6 +150,7 @@ def main():
     ap.add_argument("name")
     ap.add_argument("--scenes", default=os.path.join(HERE, "scenes", "Q1第1回.js"), help="場面ごとの絵（JS）")
     ap.add_argument("--fps", type=int, default=30)
+    ap.add_argument("--span", help="一部分だけ書き出す 開始秒,終了秒（見本用）")
     ap.add_argument("--preview", help="確認用に静止画だけ書き出す秒数（カンマ区切り）")
     a = ap.parse_args()
     outdir = os.path.abspath(a.name + "_work")
@@ -160,7 +166,8 @@ def main():
     if a.preview:
         preview(html, [float(x) for x in a.preview.split(",")], outdir)
     else:
-        render(html, wav, duration, a.fps, os.path.abspath(a.name + ".mp4"))
+        span = [float(x) for x in a.span.split(",")] if a.span else None
+        render(html, wav, duration, a.fps, os.path.abspath(a.name + ".mp4"), span)
 
 
 if __name__ == "__main__":
