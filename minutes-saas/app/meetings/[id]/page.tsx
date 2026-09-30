@@ -1,0 +1,65 @@
+import Link from "next/link";
+import { db } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+export default async function Meeting({ params }: { params: { id: string } }) {
+  const { data: m } = await db.from("meetings").select("*").eq("id", params.id).single();
+  const { data: templates } = await db.from("templates").select("id, name, is_default").order("created_at");
+  const { data: a } = await db.from("analyses").select("*, templates(name)").eq("meeting_id", params.id).maybeSingle();
+  const { data: ds } = a
+    ? await db.from("deliveries").select("id, status, error, contacts(name, email)").eq("analysis_id", a.id)
+    : { data: [] as any[] };
+  if (!m) return <p>見つかりません</p>;
+  return (
+    <main>
+      <Link href="/">← 一覧</Link>
+      <h1>{m.topic}</h1>
+      <h2>分析</h2>
+      {!a && m.skip_analysis && <p>この会議は「分析不要」です(全文の保存のみ)。</p>}
+      {!a && !m.skip_analysis && (
+        <form action={`/api/meetings/${m.id}/analyze`} method="post">
+          テンプレート:{" "}
+          <select name="template_id" defaultValue={(templates ?? []).find((t) => t.is_default)?.id}>
+            {(templates ?? []).map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>{" "}
+          <button>分析する</button>
+        </form>
+      )}
+      {!a && (
+        <form action={`/api/meetings/${m.id}/skip`} method="post">
+          <input type="hidden" name="skip" value={m.skip_analysis ? "0" : "1"} />
+          <button>{m.skip_analysis ? "分析不要を解除" : "分析不要にする"}</button>
+        </form>
+      )}
+      {a && <p><small>テンプレート: {(a as any).templates?.name ?? "(削除済み)"}</small></p>}
+      {a && (
+        <form action={`/api/meetings/${m.id}/approve`} method="post">
+          <textarea name="content" defaultValue={a.content} rows={20} style={{ width: "100%" }} />
+          <button>{a.approved_at ? "修正して再承認" : "承認して相手に送信"}</button>
+        </form>
+      )}
+      {a && (
+        <>
+          <h3>配信状況</h3>
+          <ul>
+            {(ds ?? []).map((d: any, i: number) => (
+              <li key={i}>
+                {d.contacts?.name} ({d.contacts?.email ?? "メール未登録"}) — {d.status === "waiting_email" ? (d.contacts?.email ? "送信待ち" : "住所待ち") : d.status}
+                {d.status === "failed" && (
+                  <form action={`/api/deliveries/${d.id}/retry`} method="post" style={{ display: "inline", marginLeft: 8 }}>
+                    <small style={{ color: "crimson" }}>{d.error}</small> <button>再送</button>
+                  </form>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <h2>清書した全文</h2>
+      <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>{m.transcript_clean}</pre>
+    </main>
+  );
+}
