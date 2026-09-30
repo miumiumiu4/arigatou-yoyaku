@@ -28,7 +28,7 @@ Gemini の APIキーを、Claude Code（claude.ai/code）の作業環境に登�
 3. 「Get code」（コードを取得）を開き、使われているモデル名（gemini-…-tts のような文字列）をそのまま控える
 
 ■ 3. Claude Code の環境に登録する
-1. https://claude.ai/code を開き、リポジトリ arigatou-yoyaku のセッション（「エバーグリーン講座とナーチャリング音声」）を開く
+1. https://claude.ai/code を開き、リポジトリ arigatou-yoyaku のセッション「三浦のAI音声生成」（クラウド）を開く
 2. 画面上部のクラウド環境のメニュー →「Edit」（編集）を開き、環境変数の欄を探す
 3. 次の4行を登録する。1行目のキーの部分は、三浦が自分で貼り付ける（あなたは入力欄の場所を伝えて止まる）
    GEMINI_API_KEY=（三浦がコピーしたキーを貼る）

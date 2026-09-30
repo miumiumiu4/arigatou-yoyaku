@@ -29,7 +29,7 @@ Google AI Studio で講座動画の声を選び、Gemini の APIキーを Claude
 3. 「Create API key」ボタンの場所を私に伝えて止まる → 三浦が作成してコピーする
 
 ■ 3. Claude Code の環境に登録する画面まで案内する
-1. https://claude.ai/code を開き、「エバーグリーン講座とナーチャリング音声」のセッション（リポジトリ arigatou-yoyaku）を開く
+1. https://claude.ai/code を開き、「三浦のAI音声生成」のセッション（リポジトリ arigatou-yoyaku・クラウド）を開く
 2. 画面上部のクラウド環境のメニュー →「Edit」（編集）を開く
 3. 環境変数の欄の場所を私に伝えて止まる → 三浦が次の1行を入力して保存する
    GEMINI_API_KEY=（コピーしたキー）
