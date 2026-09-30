@@ -103,7 +103,7 @@ def load_bgm(path, seconds, level):
     return x
 
 
-def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.08):
+def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.06):
     chunks, t = [np.zeros(int(LEAD_IN * SR), np.float32)], LEAD_IN
     for i, line in enumerate(lines):
         x = tts_line(line)
@@ -203,7 +203,7 @@ def main():
     ap.add_argument("name")
     ap.add_argument("--scenes", default=os.path.join(HERE, "scenes", "Q1第1回.js"), help="場面ごとの絵（JS）")
     ap.add_argument("--bgm", help="BGMの音声ファイル（Suno の曲など）。話している間ずっと小さく流す")
-    ap.add_argument("--bgm-level", type=float, default=0.08, help="BGMの音量（0〜1）")
+    ap.add_argument("--bgm-level", type=float, default=0.06, help="BGMの音量（0〜1）。6%が「ちょうど良い」の基準")
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--span", help="一部分だけ書き出す 開始秒,終了秒（見本用）")
     ap.add_argument("--preview", help="確認用に静止画だけ書き出す秒数（カンマ区切り）")
