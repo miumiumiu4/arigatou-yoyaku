@@ -207,15 +207,16 @@ function draw(sc, x, y, w, h, shapes, t0, dur, opt = {}) {
     const t = at('unknown', 3 + i, 0.05);
     const x = 170 + i * 520;
     chalk(sc, q, x, 380, 46, t, 1.0);
-    const mark = chalk(sc, '？', x + 150, 450, 110, t + 0.4, 0.4, { kind: 'pop', or: true });
+    const mark = chalk(sc, '？', x + 150, 450, 110, t + 0.4, 0.4, { kind: 'none', or: true });
     // 「大きく、怖く見えます」で ？が大きく震える／「見えるようにします」で消える
     items.push({ el: mark, t0: at('unknown', 7, 0), dur: 1.4, kind: 'custom',
       fn: (p, e, t) => {
+        const show = clamp((t - (at('unknown', 3 + i, 0.05) + 0.4)) / 0.4);   // 質問を書いたあとに出る
         const hide = clamp((t - at('unknown', 8, 0.3)) / 0.5);
-        const s = 1 + 0.8 * easeOut(p);
+        const s = (0.4 + 0.6 * easeBack(show)) * (1 + 0.8 * easeOut(p));
         const wob = p > 0 && hide < 1 ? Math.sin(t * 14 + i) * 4 : 0;
         e.style.transform = `scale(${s}) rotate(${wob}deg)`;
-        e.style.opacity = String(1 - hide);
+        e.style.opacity = String(clamp(show * 3) * (1 - hide));
       } });
     draw(sc, x + 150, 470, 120, 110, [{ d: 'M10 60 L45 95 L110 10', o: true, w: 9 }], at('unknown', 8, 0.7 + i * 0.25), 0.5);
   });
@@ -273,6 +274,7 @@ function applyItem(it, t) {
   } else if (it.kind === 'draw') {
     e.querySelectorAll('path').forEach(pa => { pa.style.strokeDashoffset = String(1 - p); });
     e.style.opacity = p > 0 ? '1' : '0';
+  } else if (it.kind === 'none') {
   } else if (it.kind === 'custom') {
     it.fn(p, e, t);
   }
