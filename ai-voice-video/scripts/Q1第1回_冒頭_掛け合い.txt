@@ -1,0 +1,43 @@
+# Q1第1回「エアコン清掃独立のリアル」冒頭（スライド1〜3）を二人の掛け合いにしたもの
+# 形式：話者 | 演技の指示（Gemini TTS にそのまま渡す短い英語） | セリフ
+# 話者：N＝語り手（ありがとうグループの三浦）、L＝聞き手（受講生。相づちと短い質問だけ）
+# 「# scene:」の行で場面が切り替わる（黒板の絵が変わる）
+# 数字・事実は元の台本（エバー講座_Q1第1回_台本）のものだけを使っている
+
+# scene: title
+N | warm, calm, welcoming | こんにちは。ありがとうグループの三浦です。
+N | warm, sincere | この講座を選んでくださって、本当にありがとうございます。
+L | bright, a little nervous | よろしくお願いします！
+N | calm, confident | 全部で7回。最後には、あなた自身の独立のロードマップができあがります。
+L | surprised, curious | 7回で、ロードマップまで？
+N | calm, clear | はい。第1回のテーマは、「エアコン清掃独立のリアル」です。
+
+# scene: agenda
+N | clear, steady pace | 今日お話しするのは、3つです。
+N | clear | どんな仕事なのか。
+N | clear | どれくらいの時間がかかって、どれくらいのお金になるのか。
+N | clear, slightly serious | そして、独立したあとに、何が起きるのか。
+L | cautious | いいことばかりじゃ、ないですよね？
+N | honest, reassuring | そうです。大変なところも含めて、そのままお話しします。
+
+# scene: unknown
+N | thoughtful | なぜ最初に、この話をするのか。
+N | thoughtful, slow | 独立を考えている人の不安の多くは、実は「知らないこと」から来ています。
+L | curious | 知らないこと、ですか。
+N | calm | どんな仕事なのか、よく分からない。
+N | calm | いくら稼げるのか、分からない。
+N | calm | 独立したら何が起きるのか、分からない。
+L | realizing, small laugh | たしかに、全部分からないです。
+N | gentle | 分からないものは、大きく、怖く見えます。
+N | encouraging | だから今日は、まず見えるようにします。
+N | encouraging, confident | 見えれば、自分にできるかどうかを、自分で判断できるようになります。
+
+# scene: job
+N | clear, friendly | エアコン清掃は、ひとことで言うと、機械を分解して、洗って、組み立てる仕事です。
+L | curious | 資格は、いるんですか？
+N | reassuring | 特別な国家資格はいりません。自宅を拠点にして、道具一式から始められます。
+L | worried | でも、体力がないと、無理ですよね？
+N | warm, knowing smile | よく、そう聞かれます。でも私は、力仕事というより、「段取り」の仕事だと思っています。
+N | explaining, steady | どの順番で外して、どう養生して、どう洗って、どう戻すか。
+N | confident | この段取りが身につくと、仕事は一気に速く、きれいになります。
+L | impressed, thinking | 段取り、かあ。
