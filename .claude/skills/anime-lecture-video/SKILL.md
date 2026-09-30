@@ -119,7 +119,9 @@ HTMLファイル1つで動く解説アニメを作ってください（1920×108
 
 - `ai-voice-video/board/`：**黒板授業（パターンA）の仕組み**。二人の掛け合い台本 → 行ごとに声 → 時間の一覧 → HTMLの黒板アニメ（`template.html`、`window.seek(秒)` で止まる）→ Chromium で1コマずつ撮って MP4
   - 台本の形式：`話者 | 演技の指示（英語） | セリフ`、`# scene: 名前` で場面を分ける（例 `ai-voice-video/scripts/Q1第1回_冒頭_掛け合い.txt`）
-  - 場面ごとの絵は `template.html` の場面の関数に書く（`at(場面, 行, 秒)` で「その行が始まって何秒後」に出す）
+  - 場面ごとの絵は `board/scenes/講座名.js` に書き、`--scenes` で渡す（`at(場面, 行, 秒)` で「その行が始まって何秒後」、`mid(場面, 行, 割合)` で「その行の途中」に出す）
+  - 絵を足したら、各場面の終わりの秒数で `--preview` を出し、文字と線の重なり・黒板からのはみ出しを必ず目で確かめる（1回目はほぼ必ずどこか重なる）
+  - 書き出しは30fpsで、1分あたり約2分かかる
   - 確認用の静止画：`python3 board.py 台本 名前 --preview 26,48,87`
   - 声は今は仮（Open JTalk、語り手と聞き手で高さを変えている）。`tts_line()` を Gemini TTS に替える
 - `ai-voice-video/Chrome用プロンプト_Gemini声とAPIキー.md`：Chrome の Claude に声選びとAPIキー登録を手伝わせるプロンプト

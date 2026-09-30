@@ -2,7 +2,7 @@
 
 使い方:
   cd ai-voice-video/board && npm install   # 手書き風フォント（初回だけ）
-  python3 board.py ../scripts/Q1第1回_冒頭_掛け合い.txt 出力名 [--fps 30] [--preview 秒,秒,...]
+  python3 board.py ../scripts/Q1第1回_掛け合い.txt 出力名 --scenes scenes/Q1第1回.js [--fps 30] [--preview 秒,秒,...]
 
 声は今は仮の合成音声（Open JTalk）。語り手（N）と聞き手（L）で高さを変えている。
 Gemini TTS に替えるときは tts_line() を差し替える（台本の演技の指示はそのまま使える）。
@@ -86,11 +86,12 @@ def timeline(lines, duration):
             "lines": [{k: l[k] for k in ("spk", "text", "start", "end", "scene")} for l in lines]}
 
 
-def write_html(tl, out_html):
+def write_html(tl, out_html, scenes_js):
     logo = os.path.join(os.path.dirname(HERE), "logo", "ありがとうグループ_ロゴ_白.png")
     logo_uri = "data:image/png;base64," + base64.b64encode(open(logo, "rb").read()).decode()
     html = open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
     html = html.replace("__TIMELINE__", json.dumps(tl, ensure_ascii=False)).replace("__LOGO__", logo_uri)
+    html = html.replace("__SCENES__", open(scenes_js, encoding="utf-8").read())
     with open(out_html, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -142,6 +143,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("script")
     ap.add_argument("name")
+    ap.add_argument("--scenes", default=os.path.join(HERE, "scenes", "Q1第1回.js"), help="場面ごとの絵（JS）")
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--preview", help="確認用に静止画だけ書き出す秒数（カンマ区切り）")
     a = ap.parse_args()
@@ -153,7 +155,7 @@ def main():
     tl = timeline(lines, duration)
     json.dump(tl, open(os.path.join(outdir, "timeline.json"), "w"), ensure_ascii=False, indent=1)
     html = os.path.join(HERE, "_render.html")   # フォント（node_modules）を読むため、このフォルダに置く
-    write_html(tl, html)
+    write_html(tl, html, a.scenes)
     print(f"長さ {duration:.1f}秒、{len(lines)}行、場面 {list(tl['scenes'])}")
     if a.preview:
         preview(html, [float(x) for x in a.preview.split(",")], outdir)
