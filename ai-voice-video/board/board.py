@@ -103,7 +103,7 @@ def load_bgm(path, seconds, level):
     return x
 
 
-def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.06):
+def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.06, opening=None, intro=0.0, ending=None, outro=0.0):
     chunks, t = [np.zeros(int(LEAD_IN * SR), np.float32)], LEAD_IN
     for i, line in enumerate(lines):
         x = tts_line(line)
@@ -125,27 +125,43 @@ def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.06):
         mix = voice + make_bgm(len(voice) / SR + 1)[:len(voice)] * 0.06
     f = int(1.5 * SR)
     mix[-f:] *= np.linspace(1, 0, f)
+    # オープニング曲（頭の intro 秒）とエンディング曲（outro 秒）をつける。セリフの時刻はその分うしろへずらす
+    if opening and intro > 0:
+        op = load_bgm(opening, intro, 0.45)
+        k = int(1.2 * SR)
+        op[-k:] *= np.linspace(1, 0, k)
+        mix = np.concatenate([op, mix])
+        for line in lines:
+            line["start"] = round(line["start"] + intro, 3)
+            line["end"] = round(line["end"] + intro, 3)
+    if ending and outro > 0:
+        ed = load_bgm(ending, outro, 0.42)
+        mix = np.concatenate([mix, ed])
     with wave.open(wav_path, "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
         w.setframerate(SR)
         w.writeframes((np.clip(mix, -1, 1) * 32767).astype(np.int16).tobytes())
-    return len(voice) / SR
+    return len(mix) / SR
 
 
-def timeline(lines, duration):
+def timeline(lines, duration, meta=None):
     scenes = {}
     for i, line in enumerate(lines):
         s = scenes.setdefault(line["scene"], {"start": line["start"], "lines": []})
         s["lines"].append(i)
-    return {"duration": round(duration, 3), "scenes": scenes,
-            "lines": [{k: l[k] for k in ("spk", "direction", "text", "start", "end", "scene")} for l in lines]}
+    tl = {"duration": round(duration, 3), "scenes": scenes,
+          "lines": [{k: l[k] for k in ("spk", "direction", "text", "start", "end", "scene")} for l in lines]}
+    tl.update(meta or {})
+    return tl
 
 
 def write_html(tl, out_html, scenes_js):
     logo = os.path.join(os.path.dirname(HERE), "logo", "ありがとうグループ_ロゴ_白.png")
     logo_uri = "data:image/png;base64," + base64.b64encode(open(logo, "rb").read()).decode()
     html = open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
+    navy = os.path.join(os.path.dirname(HERE), "logo", "ありがとうグループ_ロゴ_紺.png")
+    html = html.replace("__LOGO_NAVY__", "data:image/png;base64," + base64.b64encode(open(navy, "rb").read()).decode())
     html = html.replace("__TIMELINE__", json.dumps(tl, ensure_ascii=False)).replace("__LOGO__", logo_uri)
     html = html.replace("__SCENES__", open(scenes_js, encoding="utf-8").read())
     html = html.replace("__CHARS__", open(os.path.join(HERE, "characters.js"), encoding="utf-8").read())
@@ -204,6 +220,14 @@ def main():
     ap.add_argument("--scenes", default=os.path.join(HERE, "scenes", "Q1第1回.js"), help="場面ごとの絵（JS）")
     ap.add_argument("--bgm", help="BGMの音声ファイル（Suno の曲など）。話している間ずっと小さく流す")
     ap.add_argument("--bgm-level", type=float, default=0.06, help="BGMの音量（0〜1）。6%が「ちょうど良い」の基準")
+    ap.add_argument("--opening", help="オープニング曲（頭の --intro 秒を使う）")
+    ap.add_argument("--intro", type=float, default=7.0, help="オープニングの長さ（秒）")
+    ap.add_argument("--ending", help="エンディング曲（頭の --outro 秒を使う）")
+    ap.add_argument("--outro", type=float, default=8.0, help="エンディングの長さ（秒）")
+    ap.add_argument("--series", default="未経験からエアコン清掃で独立するロードマップ", help="オープニングに出すシリーズ名")
+    ap.add_argument("--number", default="", help="オープニングに出す回（例：第3回）")
+    ap.add_argument("--title", default="", help="オープニングに出すタイトル")
+    ap.add_argument("--next", default="", help="エンディングに出す次回の案内")
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--span", help="一部分だけ書き出す 開始秒,終了秒（見本用）")
     ap.add_argument("--preview", help="確認用に静止画だけ書き出す秒数（カンマ区切り）")
@@ -212,8 +236,12 @@ def main():
     os.makedirs(outdir, exist_ok=True)
     lines = parse(a.script)
     wav = os.path.join(outdir, "audio.wav")
-    duration = build_audio(lines, wav, a.bgm, a.bgm_level)
-    tl = timeline(lines, duration)
+    intro = a.intro if a.opening else 0.0
+    outro = a.outro if a.ending else 0.0
+    duration = build_audio(lines, wav, a.bgm, a.bgm_level, a.opening, intro, a.ending, outro)
+    meta = {"intro": intro, "outro": round(duration - outro, 3) if outro else 0,
+            "series": a.series, "number": a.number, "title": a.title, "next": a.next}
+    tl = timeline(lines, duration, meta)
     json.dump(tl, open(os.path.join(outdir, "timeline.json"), "w"), ensure_ascii=False, indent=1)
     html = os.path.join(HERE, "_render.html")   # フォント（node_modules）を読むため、このフォルダに置く
     write_html(tl, html, a.scenes)

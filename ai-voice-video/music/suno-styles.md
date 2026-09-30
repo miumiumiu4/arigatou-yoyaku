@@ -69,3 +69,14 @@ Exclude Styles:
 ```
 vocals, heavy drums, epic trailer, EDM, aggressive
 ```
+
+## 6. 講座のBGM・カフェジャズ版（9/30 三浦さんの希望：「スタバにいるような、落ち着いたジャズ」）
+01 の差し替え候補。話の下に流すので、目立つソロや大きな盛り上がりは入れない
+Styles:
+```
+smooth cafe jazz instrumental, coffee shop background, soft jazz piano trio, upright bass, brushed drums, mellow and cozy, 85 bpm, relaxed swing, warm and intimate, background music for spoken narration, consistent groove, no big solos
+```
+Exclude Styles:
+```
+vocals, scat, saxophone lead, loud drums, fast tempo, big band, fusion, EDM, sudden changes, build-ups
+```
