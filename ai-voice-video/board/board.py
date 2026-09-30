@@ -44,8 +44,11 @@ def parse(path):
 
 
 def tts_line(line):
-    import pyopenjtalk
+    """1行分の声を作る。GEMINI_API_KEY があれば Gemini の声、なければ仮の声（Open JTalk）。"""
     text = line["text"]
+    if os.environ.get("GEMINI_API_KEY"):
+        return gemini_tts(text, line["direction"], line["spk"])
+    import pyopenjtalk
     for wrong, right in READING_FIX.items():
         text = text.replace(wrong, right)
     x, sr = pyopenjtalk.tts(text, **VOICES[line["spk"]])
@@ -53,7 +56,54 @@ def tts_line(line):
     return x.astype(np.float32) / 32768.0
 
 
-def build_audio(lines, wav_path):
+# Gemini の声の設定（AI Studio の「Get code」に出るモデル名と、選んだ声の名前を環境変数で渡す）
+#   GEMINI_TTS_MODEL … モデル名（推測で書かない。AI Studio で確認した文字列）
+#   GEMINI_VOICE_N / GEMINI_VOICE_L … 語り手（三浦役）／聞き手（受講生役）の声の名前
+GEMINI_CACHE = os.path.join(HERE, ".tts_cache")   # 同じセリフを二度お金をかけて作らない
+
+
+def gemini_tts(text, direction, spk):
+    import hashlib
+    import urllib.request
+    model = os.environ["GEMINI_TTS_MODEL"]
+    voice = os.environ["GEMINI_VOICE_" + spk]
+    prompt = f"Read the following Japanese line in a {direction} tone, naturally, as a spoken lecture: {text}"
+    key = hashlib.sha256(f"{model}|{voice}|{prompt}".encode()).hexdigest()[:24]
+    os.makedirs(GEMINI_CACHE, exist_ok=True)
+    cache = os.path.join(GEMINI_CACHE, key + ".pcm")
+    if not os.path.exists(cache):
+        body = {"contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"responseModalities": ["AUDIO"],
+                                     "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}}}
+        req = urllib.request.Request(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+            data=json.dumps(body).encode(), method="POST",
+            headers={"Content-Type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+        with urllib.request.urlopen(req, timeout=120) as r:
+            res = json.load(r)
+        part = res["candidates"][0]["content"]["parts"][0]["inlineData"]
+        with open(cache, "wb") as f:
+            f.write(base64.b64decode(part["data"]))
+    pcm = np.frombuffer(open(cache, "rb").read(), dtype=np.int16).astype(np.float32) / 32768.0
+    # Gemini は 24kHz で返すので 48kHz にそろえる
+    return np.interp(np.arange(0, len(pcm), 0.5), np.arange(len(pcm)), pcm).astype(np.float32)
+
+
+def load_bgm(path, seconds, level):
+    """BGM（Suno の曲など）を読み込み、長さに合わせて繰り返し、音量を下げる。最初と最後はフェード。"""
+    raw = subprocess.run([FFMPEG, "-loglevel", "error", "-i", path, "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"],
+                         check=True, capture_output=True).stdout
+    x = np.frombuffer(raw, dtype=np.float32)
+    x = x / max(1e-6, np.max(np.abs(x)))
+    n = int(seconds * SR)
+    x = np.tile(x, n // len(x) + 1)[:n] * level
+    f = int(2.0 * SR)
+    x[:f] *= np.linspace(0, 1, f)
+    x[-f * 2:] *= np.linspace(1, 0, f * 2)
+    return x
+
+
+def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.08):
     chunks, t = [np.zeros(int(LEAD_IN * SR), np.float32)], LEAD_IN
     for i, line in enumerate(lines):
         x = tts_line(line)
@@ -69,7 +119,10 @@ def build_audio(lines, wav_path):
             t += gap
     chunks.append(np.zeros(int(TAIL * SR), np.float32))
     voice = np.concatenate(chunks)
-    mix = voice + make_bgm(len(voice) / SR + 1)[:len(voice)] * 0.06
+    if bgm_path:
+        mix = voice + load_bgm(bgm_path, len(voice) / SR, bgm_level)
+    else:
+        mix = voice + make_bgm(len(voice) / SR + 1)[:len(voice)] * 0.06
     f = int(1.5 * SR)
     mix[-f:] *= np.linspace(1, 0, f)
     with wave.open(wav_path, "wb") as w:
@@ -149,6 +202,8 @@ def main():
     ap.add_argument("script")
     ap.add_argument("name")
     ap.add_argument("--scenes", default=os.path.join(HERE, "scenes", "Q1第1回.js"), help="場面ごとの絵（JS）")
+    ap.add_argument("--bgm", help="BGMの音声ファイル（Suno の曲など）。話している間ずっと小さく流す")
+    ap.add_argument("--bgm-level", type=float, default=0.08, help="BGMの音量（0〜1）")
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--span", help="一部分だけ書き出す 開始秒,終了秒（見本用）")
     ap.add_argument("--preview", help="確認用に静止画だけ書き出す秒数（カンマ区切り）")
@@ -157,7 +212,7 @@ def main():
     os.makedirs(outdir, exist_ok=True)
     lines = parse(a.script)
     wav = os.path.join(outdir, "audio.wav")
-    duration = build_audio(lines, wav)
+    duration = build_audio(lines, wav, a.bgm, a.bgm_level)
     tl = timeline(lines, duration)
     json.dump(tl, open(os.path.join(outdir, "timeline.json"), "w"), ensure_ascii=False, indent=1)
     html = os.path.join(HERE, "_render.html")   # フォント（node_modules）を読むため、このフォルダに置く
