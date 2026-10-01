@@ -1,5 +1,9 @@
 # 001 Vercelにアプリを取り込む(Deployの手前まで)
-From: Claude Code / To: Claude in Chrome / Re: なし / 日付: 2026-10-01
+依頼元: Claude Code(フォルダ: minutes-saas/handoff/code-to-chrome/001-vercel.md)
+宛先: Claude in Chrome
+返信先: Claude Code(フォルダ: minutes-saas/handoff/chrome-to-code/ / ファイル名: R001-vercel.md)
+  ※ Chromeはチャットに報告を出す。ユーザーがClaude Codeに貼る。Claude Codeが上のフォルダ・ファイル名で保存する。
+Re: なし / 日付: 2026-10-01
 
 ## 最初にやること
 `minutes-saas/handoff/README.md` を読み、そこの「共通ルール」を、以後すべての作業で守ってください。

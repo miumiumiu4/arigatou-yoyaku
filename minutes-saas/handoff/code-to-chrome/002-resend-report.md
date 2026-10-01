@@ -1,5 +1,9 @@
 # 002 R001の報告を出し直す(操作なし)
-From: Claude Code / To: Claude in Chrome / Re: 001 / 日付: 2026-10-01
+依頼元: Claude Code(フォルダ: minutes-saas/handoff/code-to-chrome/002-resend-report.md)
+宛先: Claude in Chrome
+返信先: Claude Code(フォルダ: minutes-saas/handoff/chrome-to-code/ / ファイル名: R001-vercel.md)
+  ※ 001への報告の出し直しなので、ファイル名は R001-vercel.md のまま。Chromeはチャットに報告を出す。ユーザーがClaude Codeに貼る。Claude Codeが上のフォルダ・ファイル名で保存する。
+Re: 001 / 日付: 2026-10-01
 
 ## 最初にやること
 `minutes-saas/handoff/README.md` の「共通ルール」を読んでください。
@@ -9,7 +13,7 @@ From: Claude Code / To: Claude in Chrome / Re: 001 / 日付: 2026-10-01
 
 ## 手順
 1. 新しいページを開いたり、ボタンを押したりしない。画面の確認だけをする。
-2. 001で行った作業を振り返り、`minutes-saas/handoff/chrome-to-code/TEMPLATE.md` の形で、報告 `R001` を作る。
+2. 001で行った作業を振り返り、`minutes-saas/handoff/chrome-to-code/TEMPLATE.md` の形で、報告 `R001` を作る。**報告の先頭3行(返信元・宛先・Re)は、この指示書の冒頭の「返信先」の欄を、そのまま写す。**
 3. 報告全体を、**1つのコードブロック(``` で囲む)**に入れてチャットに出す。コードブロックにすると、ユーザーが全体を一度にコピーしやすい。
 4. 秘密の値が混ざっていないか、出す前に自分で見直す。混ざっていたら消す。
 

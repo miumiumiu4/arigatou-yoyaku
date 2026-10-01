@@ -1,5 +1,9 @@
 # R(番号) 件名
-From: Claude in Chrome / To: Claude Code / Re: (指示書の番号) / 日付
+返信元: Claude in Chrome(受け取った指示書: minutes-saas/handoff/code-to-chrome/(指示書のファイル名))
+宛先: Claude Code(返信先フォルダ: minutes-saas/handoff/chrome-to-code/ / ファイル名: (指示書で指定されたR…md))
+Re: (指示書の番号) / 日付
+
+※ 先頭の3行は、指示書の「返信先」の欄に書かれた内容を、そのまま写す。
 
 ## 結論(1〜2行)
 (例: 手順5の途中まで完了。Deployの手前で止まっている。)

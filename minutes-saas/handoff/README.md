@@ -13,10 +13,24 @@
 - `chrome-to-code/` : Claude in Chrome → Claude Code への報告・依頼。`TEMPLATE.md` の形で書く。返信番号は指示書の番号に合わせる(指示`001` → 報告`R001`)。
 
 ## 運び方
-1. Claude Code が `code-to-chrome/NNN-….md` を書いてpushする。
+1. Claude Code が `code-to-chrome/NNN-件名.md` を書いてpushする。(依頼元のフォルダ = `minutes-saas/handoff/code-to-chrome/`)
 2. ユーザーが Claude in Chrome に「このURLの指示書を読んで実行して」と、URLだけ貼る。
-3. Claude in Chrome は、指示書を読み、`chrome-to-code/TEMPLATE.md` の形で、**チャットに**報告を出す。
-4. ユーザーがその報告を Claude Code に貼る。Claude Code は、次の指示書(`NNN+1`)を書く。
+3. Claude in Chrome は、指示書を読み、`chrome-to-code/TEMPLATE.md` の形で、**チャットに**報告を出す。報告の先頭に、指示書で指定された「返信先フォルダ」「返信ファイル名」を、そのまま書く。
+4. ユーザーがその報告を Claude Code に貼る。
+5. Claude Code は、貼られた報告を、**返信先フォルダ(`minutes-saas/handoff/chrome-to-code/`)に、指定のファイル名で保存**する(秘密の値が混ざっていたら消してから)。これで、やり取りの履歴がフォルダに残る。
+6. Claude Code は、次の指示書(`NNN+1`)を書く。
+
+## どのフォルダからどのフォルダへ
+| 流れ | 依頼元のフォルダ | 返信先のフォルダ |
+|---|---|---|
+| Claude Code → Claude in Chrome(指示) | `minutes-saas/handoff/code-to-chrome/` | (Chromeは、チャットで返信する) |
+| Claude in Chrome → Claude Code(報告・依頼) | (Chromeの画面) | `minutes-saas/handoff/chrome-to-code/` |
+
+**すべての指示書と報告に、次の4項目を必ず書く。**
+- 依頼元(誰の・どのフォルダ)
+- 宛先(誰)
+- 返信先(誰の・どのフォルダ・何というファイル名)
+- 前の番号(Re)
 
 ## 共通ルール(両方のClaudeが必ず守る)
 1. **秘密の値は、ファイルにも、チャットにも書かない。** パスワード、APIキー、`service_role`キー、Secret Token、認証コード、ログイン後のURLに付く `code=` `token=` など。「設定済み」「取得済み」とだけ書く。
@@ -30,7 +44,11 @@
 ## 指示書の形式
 ```
 # 001 件名
-From: Claude Code / To: Claude in Chrome / Re: (前の番号) / 日付
+依頼元: Claude Code(フォルダ: minutes-saas/handoff/code-to-chrome/001-件名.md)
+宛先: Claude in Chrome
+返信先: Claude Code(フォルダ: minutes-saas/handoff/chrome-to-code/ / ファイル名: R001-件名.md)
+  ※ Chromeはチャットに報告を出す。ユーザーがClaude Codeに貼る。Claude Codeが上のフォルダ・ファイル名で保存する。
+Re: (前の番号) / 日付
 
 ## 目的
 ## 前提情報
