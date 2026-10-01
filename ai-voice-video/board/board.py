@@ -60,7 +60,7 @@ def tts_line(line):
 #   GEMINI_TTS_MODEL … モデル名。なければ、キーで使えるモデルの一覧から「tts」の付いたものを自動で選ぶ
 #   GEMINI_VOICE_N / GEMINI_VOICE_L … 語り手（三浦役）／聞き手（受講生役）の声の名前。なければ下の初期値
 GEMINI_CACHE = os.path.join(HERE, ".tts_cache")   # 同じセリフを二度お金をかけて作らない
-GEMINI_VOICE_DEFAULT = {"N": "Charon", "L": "Puck"}
+GEMINI_VOICE_DEFAULT = {"N": "Charon", "L": "Leda"}   # 三浦＝男性、聞き手＝女性（10/1 三浦さん）
 _gemini_model = None
 
 

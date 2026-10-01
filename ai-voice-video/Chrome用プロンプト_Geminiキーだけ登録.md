@@ -3,7 +3,7 @@
 貼る場所：**Chrome の Claude**
 
 10/1 に簡単にした。登録するのは `GEMINI_API_KEY` の1行だけ。
-モデル名は Claude Code が自動で選び、声は初期値（語り手 Charon、聞き手 Puck）で作る。声の聞き比べは、動画ができてから Claude Code が見本を作って三浦さんが耳で選ぶ。
+モデル名は Claude Code が自動で選び、声は初期値（語り手 Charon、聞き手 Leda）で作る。声の聞き比べは、動画ができてから Claude Code が見本を作って三浦さんが耳で選ぶ。
 
 ```
 Gemini の APIキーを、Claude Code の作業環境に1つ登録するのを手伝ってください。
