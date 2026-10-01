@@ -85,6 +85,28 @@ def gemini_model():
     return _gemini_model
 
 
+def gemini_request(req, tries=8):
+    """回数の上限（1分あたり10回など）に当たったら、言われた秒数だけ待ってやり直す。"""
+    import re
+    import time
+    import urllib.error
+    import urllib.request
+    for i in range(tries):
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            body = e.read().decode(errors="replace")
+            if e.code not in (429, 500, 503) or i == tries - 1:
+                raise SystemExit(f"Gemini のエラー {e.code}: {body[:600]}")
+            if "PerDay" in body:
+                raise SystemExit("Gemini の1日の上限に達しました。明日もう一度実行すると、作った分の続きから作ります")
+            m = re.search(r'"retryDelay": "(\d+)', body)
+            wait = int(m.group(1)) + 2 if m else 20 * (i + 1)
+            print(f"  Gemini の回数制限（{e.code}）。{wait}秒待ってやり直します", flush=True)
+            time.sleep(wait)
+
+
 def gemini_tts(text, direction, spk):
     import hashlib
     import urllib.request
@@ -102,11 +124,15 @@ def gemini_tts(text, direction, spk):
             f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
             data=json.dumps(body).encode(), method="POST",
             headers={"Content-Type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]})
-        with urllib.request.urlopen(req, timeout=120) as r:
-            res = json.load(r)
-        part = res["candidates"][0]["content"]["parts"][0]["inlineData"]
+        res = gemini_request(req)
+        data = base64.b64decode(res["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
+        if data[:4] == b"RIFF":   # モデルによっては WAV（ヘッダー付き）で返る。中の PCM だけ取り出す
+            import io
+            with wave.open(io.BytesIO(data)) as w:
+                assert (w.getnchannels(), w.getsampwidth(), w.getframerate()) == (1, 2, 24000), w.getparams()
+                data = w.readframes(w.getnframes())
         with open(cache, "wb") as f:
-            f.write(base64.b64decode(part["data"]))
+            f.write(data)
     pcm = np.frombuffer(open(cache, "rb").read(), dtype=np.int16).astype(np.float32) / 32768.0
     # Gemini は 24kHz で返すので 48kHz にそろえる
     return np.interp(np.arange(0, len(pcm), 0.5), np.arange(len(pcm)), pcm).astype(np.float32)
