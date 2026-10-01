@@ -108,37 +108,118 @@ def gemini_request(req, tries=8):
             time.sleep(wait)
 
 
-def gemini_tts(text, direction, spk):
+def gemini_cache_path(text, spk):
     import hashlib
-    import urllib.request
-    model = gemini_model()
     voice = os.environ.get("GEMINI_VOICE_" + spk) or GEMINI_VOICE_DEFAULT[spk]
+    key = hashlib.sha256(f"{gemini_model()}|{voice}|{text}".encode()).hexdigest()[:24]
+    os.makedirs(GEMINI_CACHE, exist_ok=True)
+    return os.path.join(GEMINI_CACHE, key + ".pcm")
+
+
+def gemini_call(speech_config, prompt):
+    """Gemini TTS を1回呼び、24kHz・16bit・モノラルの PCM（バイト列）を返す。"""
+    import io
+    import urllib.request
+    body = {"contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": speech_config}}
+    req = urllib.request.Request(
+        f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model()}:generateContent",
+        data=json.dumps(body).encode(), method="POST",
+        headers={"Content-Type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+    data = base64.b64decode(gemini_request(req)["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
+    if data[:4] == b"RIFF":   # モデルによっては WAV（ヘッダー付き）で返る。中の PCM だけ取り出す
+        with wave.open(io.BytesIO(data)) as w:
+            assert (w.getnchannels(), w.getsampwidth(), w.getframerate()) == (1, 2, 24000), w.getparams()
+            data = w.readframes(w.getnframes())
+    return data
+
+
+def gemini_tts(text, direction, spk):
     # 演技の指示は渡さず、セリフだけを読ませる。英語の指示も日本語の（かっこ書き）も、
     # このモデルは指示の文まで読み上げてしまい、systemInstruction も使えない（10/1 確認）
-    prompt = text
-    key = hashlib.sha256(f"{model}|{voice}|{prompt}".encode()).hexdigest()[:24]
-    os.makedirs(GEMINI_CACHE, exist_ok=True)
-    cache = os.path.join(GEMINI_CACHE, key + ".pcm")
+    cache = gemini_cache_path(text, spk)
     if not os.path.exists(cache):
-        body = {"contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"responseModalities": ["AUDIO"],
-                                     "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}}}
-        req = urllib.request.Request(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-            data=json.dumps(body).encode(), method="POST",
-            headers={"Content-Type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]})
-        res = gemini_request(req)
-        data = base64.b64decode(res["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
-        if data[:4] == b"RIFF":   # モデルによっては WAV（ヘッダー付き）で返る。中の PCM だけ取り出す
-            import io
-            with wave.open(io.BytesIO(data)) as w:
-                assert (w.getnchannels(), w.getsampwidth(), w.getframerate()) == (1, 2, 24000), w.getparams()
-                data = w.readframes(w.getnframes())
+        voice = os.environ.get("GEMINI_VOICE_" + spk) or GEMINI_VOICE_DEFAULT[spk]
+        data = gemini_call({"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}, text)
         with open(cache, "wb") as f:
             f.write(data)
     pcm = np.frombuffer(open(cache, "rb").read(), dtype=np.int16).astype(np.float32) / 32768.0
     # Gemini は 24kHz で返すので 48kHz にそろえる
     return np.interp(np.arange(0, len(pcm), 0.5), np.arange(len(pcm)), pcm).astype(np.float32)
+
+
+def split_by_silence(pcm, texts, sr=24000):
+    """まとめて作った音声を、無音のところで len(texts) 個に分ける。
+    切れ目の候補（0.15秒以上の無音）から、文字数の割合で見込んだ位置に近く、無音の長いものを選ぶ。"""
+    x = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32768.0
+    hop = sr // 100   # 10ms ごと
+    rms = np.sqrt(np.mean(x[:len(x) // hop * hop].reshape(-1, hop) ** 2, axis=1))
+    loud = rms > max(0.01, 0.05 * rms.max())
+    idx = np.flatnonzero(loud)
+    first, last = idx[0], idx[-1] + 1
+    gaps, i = [], first
+    while i < last:   # 無音の区間を集める（位置と長さ、10ms 単位）
+        if not loud[i]:
+            j = i
+            while j < last and not loud[j]:
+                j += 1
+            if j - i >= 15:
+                gaps.append(((i + j) / 2, j - i))
+            i = j
+        else:
+            i += 1
+    k = len(texts)
+    if len(gaps) < k - 1:
+        raise ValueError(f"無音の切れ目が足りません（{len(gaps)}か所、必要 {k - 1}）")
+    chars = np.cumsum([len(t) for t in texts])
+    expect = first + (last - first) * chars[:-1] / chars[-1]
+    span = (last - first) / k
+    # 動的計画法：j 番目の切れ目に候補 c を選ぶときのコスト＝見込みとのずれ − 無音の長さ
+    INF = 1e18
+    C = len(gaps)
+    cost = np.full((k - 1, C), INF)
+    back = np.zeros((k - 1, C), dtype=int)
+    for c in range(C):
+        cost[0, c] = abs(gaps[c][0] - expect[0]) / span - gaps[c][1] / 30
+    for j in range(1, k - 1):
+        best, arg = INF, -1
+        for c in range(C):
+            if c > 0 and cost[j - 1, c - 1] < best:
+                best, arg = cost[j - 1, c - 1], c - 1
+            if arg >= 0:
+                cost[j, c] = best + abs(gaps[c][0] - expect[j]) / span - gaps[c][1] / 30
+                back[j, c] = arg
+    picks = [int(np.argmin(cost[-1]))] if k > 1 else []
+    for j in range(k - 2, 0, -1):
+        picks.insert(0, back[j, picks[0]])
+    cuts = [first] + [int(gaps[c][0]) for c in picks] + [last]
+    segs = []
+    for a, b in zip(cuts[:-1], cuts[1:]):
+        seg = np.flatnonzero(loud[a:b])
+        a2, b2 = a + seg[0], a + seg[-1] + 1   # 前後の無音を落とす（0.05秒だけ残す）
+        segs.append(pcm[max(0, a2 - 5) * hop * 2:(b2 + 5) * hop * 2])
+    return segs
+
+
+def gemini_batch(lines, size=8):
+    """まだ声のない行を size 行ずつまとめて1回で作り、無音で行ごとに分けて保存する（1日の回数上限の節約）。
+    二人の声は multiSpeakerVoiceConfig で1回の中で読み分ける。"""
+    todo = [l for l in lines if not os.path.exists(gemini_cache_path(l["text"], l["spk"]))]
+    voices = [{"speaker": s, "voiceConfig": {"prebuiltVoiceConfig": {
+        "voiceName": os.environ.get("GEMINI_VOICE_" + s) or GEMINI_VOICE_DEFAULT[s]}}} for s in ("N", "L")]
+    names = {"N": "Miura", "L": "Student"}
+    for s in voices:
+        s["speaker"] = names[s["speaker"]]
+    print(f"まとめて作る：{len(todo)}行 → {-(-len(todo) // size)}回", flush=True)
+    for b in range(0, len(todo), size):
+        group = todo[b:b + size]
+        prompt = "\n".join(f"{names[l['spk']]}: {l['text']}" for l in group)
+        pcm = gemini_call({"multiSpeakerVoiceConfig": {"speakerVoiceConfigs": voices}}, prompt)
+        segs = split_by_silence(pcm, [l["text"] for l in group])
+        for l, seg in zip(group, segs):
+            with open(gemini_cache_path(l["text"], l["spk"]), "wb") as f:
+                f.write(seg)
+        print(f"  {b + len(group)}/{len(todo)}行（{len(pcm) / 48000:.1f}秒を{len(group)}つに分けた）", flush=True)
 
 
 def load_bgm(path, seconds, level):
@@ -283,11 +364,14 @@ def main():
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--span", help="一部分だけ書き出す 開始秒,終了秒（見本用）")
     ap.add_argument("--preview", help="確認用に静止画だけ書き出す秒数（カンマ区切り）")
+    ap.add_argument("--batch", type=int, default=0, help="Gemini の声を何行ずつまとめて作るか（1日の回数上限の節約）")
     ap.add_argument("--audio-only", action="store_true", help="動画は作らず、音声（MP3）だけ書き出す")
     a = ap.parse_args()
     outdir = os.path.abspath(a.name + "_work")
     os.makedirs(outdir, exist_ok=True)
     lines = parse(a.script)
+    if a.batch and os.environ.get("GEMINI_API_KEY"):
+        gemini_batch(lines, a.batch)
     wav = os.path.join(outdir, "audio.wav")
     intro = a.intro if a.opening else 0.0
     outro = a.outro if a.ending else 0.0
