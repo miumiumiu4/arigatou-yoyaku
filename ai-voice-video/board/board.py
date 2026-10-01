@@ -45,6 +45,8 @@ def parse(path):
 
 def tts_line(line):
     """1行分の声を作る。GEMINI_API_KEY があれば Gemini の声、なければ仮の声（Open JTalk）。"""
+    if "_audio" in line:   # gemini_batch() で場面ごとにまとめて作ったもの
+        return line["_audio"]
     text = line["text"]
     if os.environ.get("GEMINI_API_KEY"):
         return gemini_tts(text, line["direction"], line["spk"])
@@ -112,6 +114,114 @@ def gemini_tts(text, direction, spk):
     return np.interp(np.arange(0, len(pcm), 0.5), np.arange(len(pcm)), pcm).astype(np.float32)
 
 
+GEMINI_SPEAKER = {"N": "Miura", "L": "Yui"}
+CHUNK_LINES, CHUNK_CHARS = 12, 450
+
+
+def _gemini_post(model, body):
+    import time
+    import urllib.error
+    import urllib.request
+    for i in range(6):
+        req = urllib.request.Request(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+            data=json.dumps(body).encode(), method="POST",
+            headers={"Content-Type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+        try:
+            with urllib.request.urlopen(req, timeout=300) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            msg = e.read().decode(errors="replace")
+            if e.code == 429 and "per_day" in msg:
+                raise SystemExit("Gemini の1日の上限（1モデル100回）に達しました。時間をおくか、GEMINI_TTS_MODEL を別のモデルにしてください")
+            if e.code in (429, 500, 503) and i < 5:
+                time.sleep(15 * (i + 1))
+                continue
+            raise SystemExit(f"Gemini エラー {e.code}: {msg[:300]}")
+
+
+def _pcm(data):
+    """Gemini の音声（wav か 24kHz の生の PCM）を 48kHz の float にする。"""
+    import io
+    if data[:4] == b"RIFF":
+        w = wave.open(io.BytesIO(data))
+        sr, data = w.getframerate(), w.readframes(w.getnframes())
+    else:
+        sr = 24000
+    x = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
+    return np.interp(np.arange(0, len(x), sr / SR), np.arange(len(x)), x).astype(np.float32)
+
+
+def gemini_batch(lines):
+    """場面ごとに会話をまとめて Gemini に頼み、1行ずつに切り分けて line["_audio"] に入れる。
+    1日に頼める回数（1モデル100回）を節約するため。1回で最大12行・450字。"""
+    import hashlib
+    from split_dialogue import split
+    model = gemini_model()
+    voices = {s: os.environ.get("GEMINI_VOICE_" + s) or GEMINI_VOICE_DEFAULT[s] for s in ("N", "L")}
+    chunks, cur = [], []
+    for line in lines:
+        if cur and (line["scene"] != cur[-1]["scene"] or len(cur) >= CHUNK_LINES
+                    or sum(len(l["text"]) for l in cur) + len(line["text"]) > CHUNK_CHARS):
+            chunks.append(cur)
+            cur = []
+        cur.append(line)
+    if cur:
+        chunks.append(cur)
+    os.makedirs(GEMINI_CACHE, exist_ok=True)
+
+    def request(ch, label):
+        sig = json.dumps([model, voices, [(l["spk"], l["text"]) for l in ch]], ensure_ascii=False)
+        cache = os.path.join(GEMINI_CACHE, "scene_" + hashlib.sha256(sig.encode()).hexdigest()[:24] + ".bin")
+        if not os.path.exists(cache):
+            print(f"  Gemini {label}（{len(ch)}行）", flush=True)
+            spk_used = sorted({l["spk"] for l in ch})
+            if len(spk_used) == 1:
+                body = {"contents": [{"parts": [{"text": "\n".join(l["text"] for l in ch)}]}],
+                        "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {
+                            "voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voices[spk_used[0]]}}}}}
+            else:
+                body = {"contents": [{"parts": [{"text": l["text"], "speechMetadata": {"speaker": GEMINI_SPEAKER[l["spk"]]}}
+                                                for l in ch]}],
+                        "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"multiSpeakerVoiceConfig": {
+                            "speakerVoiceConfigs": [{"speaker": GEMINI_SPEAKER[s],
+                                                     "voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voices[s]}}}
+                                                    for s in ("N", "L")]}}}}
+            res = _gemini_post(model, body)
+            with open(cache, "wb") as f:
+                f.write(base64.b64decode(res["candidates"][0]["content"]["parts"][0]["inlineData"]["data"]))
+        return _pcm(open(cache, "rb").read())
+
+    for n, ch in enumerate(chunks, 1):
+        rest, label = ch, f"{n}/{len(chunks)}"
+        for attempt in range(3):
+            x = request(rest, label)
+            segs = split(x, SR, [l["text"] for l in rest], [l["spk"] for l in rest])
+            bad = [l for l, sg in zip(rest, segs) if l["spk"] == "L" and len(rest) > 1 and not has_high_voice(sg)]
+            if not bad or attempt == 2:
+                break
+            # 聞き手のセリフが抜けた／語り手の声で読まれた（ときどき起きる）→ その行は1行だけで作り、残りを作り直す
+            for l in bad:
+                l["_audio"] = request([l], f"{n}/{len(chunks)} 聞き手を1行で")
+            rest = [l for l in rest if l not in bad]
+            label = f"{n}/{len(chunks)} 残りを作り直し"
+        for line, seg in zip(rest, segs):
+            line["_audio"] = seg
+        for line in ch:
+            if line["spk"] == "L" and not has_high_voice(line["_audio"]):
+                print(f"  [声の確認] 聞き手の行が低い声になっている：{line['text']}", flush=True)
+
+
+def has_high_voice(x, whole=False):
+    """聞き手（女性）の高い声が入っているか。whole=True は場面まるごとの音声（0.4秒以上あればよい）。"""
+    from split_dialogue import pitch_track
+    f0 = pitch_track(x, SR)
+    v = f0[f0 > 0]
+    if whole:
+        return np.sum(v >= 165) >= 40
+    return len(v) > 10 and np.mean(v >= 165) > 0.3
+
+
 def load_bgm(path, seconds, level):
     """BGM（Suno の曲など）を読み込み、長さに合わせて繰り返し、音量を下げる。最初と最後はフェード。"""
     raw = subprocess.run([FFMPEG, "-loglevel", "error", "-i", path, "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"],
@@ -127,6 +237,8 @@ def load_bgm(path, seconds, level):
 
 
 def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.06, opening=None, intro=0.0, ending=None, outro=0.0):
+    if os.environ.get("GEMINI_API_KEY"):
+        gemini_batch(lines)
     chunks, t = [np.zeros(int(LEAD_IN * SR), np.float32)], LEAD_IN
     for i, line in enumerate(lines):
         x = tts_line(line)
