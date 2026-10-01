@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="node_modules/@fontsource/klee-one/400.css">
+<link rel="stylesheet" href="node_modules/@fontsource/klee-one/600.css">
+<link rel="stylesheet" href="node_modules/@fontsource/zen-maru-gothic/700.css">
+<style>
+  :root {
+    --navy: #1F3A5F;
+    --board: #17304D;
+    --chalk: #F3F0E6;
+    --orange: #E8833A;
+    --orange-chalk: #F4A765;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0E1B2C; }
+  #stage { position: relative; width: 1920px; height: 1080px; }
+
+  /* 黒板 */
+  #frame {
+    position: absolute; left: 60px; top: 40px; width: 1800px; height: 800px;
+    border-radius: 18px; background: #6B4A2F;
+    box-shadow: 0 20px 50px rgba(0,0,0,.45), inset 0 0 0 4px #4E341F;
+  }
+  #board {
+    position: absolute; left: 84px; top: 64px; width: 1752px; height: 752px;
+    border-radius: 8px; background: var(--board); overflow: hidden;
+  }
+  #board canvas { position: absolute; inset: 0; }
+  #tray {
+    position: absolute; left: 90px; top: 826px; width: 1740px; height: 22px;
+    background: #7A5536; border-radius: 4px; box-shadow: 0 6px 10px rgba(0,0,0,.35);
+  }
+  .chalkpiece { position: absolute; top: 818px; height: 12px; border-radius: 6px; }
+
+  #logo { position: absolute; right: 110px; top: 88px; height: 46px; opacity: .9; z-index: 5; }
+
+  /* 場面 */
+  .scene { position: absolute; inset: 0; }
+  .chalk {
+    position: absolute; font-family: "Klee One", serif; font-weight: 600; color: var(--chalk);
+    text-shadow: 0 0 1px rgba(255,255,255,.9), 0 0 6px rgba(255,255,255,.18);
+    white-space: nowrap; line-height: 1.25;
+  }
+  .or { color: var(--orange-chalk); text-shadow: 0 0 1px rgba(255,210,170,.9), 0 0 6px rgba(244,167,101,.25); }
+  svg.draw { position: absolute; overflow: visible; }
+  svg.draw path, svg.draw circle, svg.draw rect, svg.draw line, svg.draw polyline {
+    fill: none; stroke: var(--chalk); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round;
+    filter: drop-shadow(0 0 2px rgba(255,255,255,.35));
+  }
+  svg.draw .o { stroke: var(--orange-chalk); }
+
+  /* 下のテロップ */
+  #bw { position: absolute; left: 0; top: 0; width: 1920px; height: 870px; transform-origin: 0 0;
+         transform: translate(173px, 24px) scale(0.82); }
+  /* スケッチブック（鉛筆と水彩の場面） */
+  .paper { position: absolute; left: 60px; top: 40px; width: 1800px; height: 808px; border-radius: 14px;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(160,130,90,.07), transparent 45%),
+      radial-gradient(circle at 80% 70%, rgba(160,130,90,.06), transparent 50%),
+      repeating-linear-gradient(0deg, rgba(90,110,140,.06) 0 1px, transparent 1px 38px),
+      #F6F0E2;
+    box-shadow: 0 20px 50px rgba(0,0,0,.45), inset 0 0 60px rgba(150,120,80,.18); }
+  .ring { position: absolute; top: 22px; width: 22px; height: 44px; border-radius: 11px; border: 5px solid #8D8A84; background: transparent; }
+  .ink { position: absolute; font-family: "Klee One", serif; font-weight: 600; color: #2E3A48; white-space: nowrap; line-height: 1.25; }
+  .ink.or { color: #D9722C; }
+  svg.sk { position: absolute; overflow: visible; }
+  svg.sk path { fill: none; stroke: #36404C; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; filter: url(#rough); }
+  svg.wc { position: absolute; overflow: visible; }
+  .pencil { position: absolute; width: 0; height: 0; z-index: 4; }
+  /* オープニング・エンディング */
+  .card { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; z-index: 50;
+    background: radial-gradient(circle at 50% 40%, #24466F, #0E1B2C 70%); }
+  #caption {
+    position: absolute; left: 60px; top: 872px; width: 1800px; height: 168px;
+    display: flex; align-items: center; gap: 28px; padding: 0 40px;
+    background: rgba(8,16,28,.82); border-radius: 18px; border: 2px solid rgba(255,255,255,.08);
+  }
+  #who {
+    flex: none; width: 150px; height: 64px; border-radius: 32px; display: flex; align-items: center;
+    justify-content: center; gap: 10px; font-family: "Zen Maru Gothic", sans-serif; font-weight: 700;
+    font-size: 28px; color: #fff;
+  }
+  #who.N { background: var(--navy); border: 2px solid #5D7FA8; }
+  #who.L { background: var(--orange); border: 2px solid #F6B98A; }
+  #bars { display: flex; gap: 4px; align-items: center; height: 26px; }
+  #bars i { display: block; width: 5px; background: #fff; border-radius: 3px; }
+  #line {
+    font-family: "Zen Maru Gothic", sans-serif; font-weight: 700; font-size: 44px; color: #fff;
+    line-height: 1.35; letter-spacing: .02em;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bw">
+  <div id="frame"></div>
+  <div id="board"><canvas id="dust" width="1752" height="752"></canvas></div>
+  <div id="tray"></div>
+  <div class="chalkpiece" style="left:1500px;width:70px;background:#F3F0E6"></div>
+  <div class="chalkpiece" style="left:1590px;width:48px;background:#F4A765"></div>
+  <img id="logo" src="__LOGO__">
+  <div id="scenes"></div>
+  </div>
+  <div id="caption"><div id="who"><span id="whoname"></span><span id="bars"><i></i><i></i><i></i><i></i></span></div><div id="line"></div></div>
+</div>
+
+<script>
+const T = __TIMELINE__;
+const BX = 84, BY = 64;             // 黒板の左上
+const items = [];                    // 時間で動くもの
+const scenes = {};
+
+// ---------- 道具 ----------
+function rnd(seed) { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+function clamp(x) { return Math.max(0, Math.min(1, x)); }
+function easeOut(p) { return 1 - Math.pow(1 - p, 3); }
+function easeBack(p) { const c = 1.7; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); }
+function line(scene, i) { return T.lines[T.scenes[scene].lines[i]]; }
+function at(scene, i, off = 0) { return line(scene, i).start + off; }
+function mid(scene, i, frac) { const l = line(scene, i); return l.start + (l.end - l.start) * frac; }
+
+function scene(name) {
+  const el = document.createElement('div');
+  el.className = 'scene';
+  document.getElementById('scenes').appendChild(el);
+  scenes[name] = el;
+  return el;
+}
+// チョークの文字。kind: write（左から書く）/ pop（ぽんと出る）/ fade
+function chalk(sc, text, x, y, size, t0, dur, opt = {}) {
+  const el = document.createElement('div');
+  el.className = 'chalk' + (opt.or ? ' or' : '');
+  el.textContent = text;
+  el.style.left = (BX + x) + 'px'; el.style.top = (BY + y) + 'px'; el.style.fontSize = size + 'px';
+  if (opt.center) { el.style.transform = 'translateX(-50%)'; }
+  sc.appendChild(el);
+  items.push({ el, t0, dur, kind: opt.kind || 'write', center: !!opt.center, fn: opt.fn });
+  return el;
+}
+// チョークの線（SVG）。paths は d の配列、o=true はオレンジ
+function draw(sc, x, y, w, h, shapes, t0, dur, opt = {}) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'draw');
+  svg.setAttribute('width', w); svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.style.left = (BX + x) + 'px'; svg.style.top = (BY + y) + 'px';
+  for (const s of shapes) {
+    const p = document.createElementNS(ns, 'path');
+    p.setAttribute('d', s.d || s);
+    if (s.o || opt.o) p.setAttribute('class', 'o');
+    if (s.w) p.style.strokeWidth = s.w;
+    p.setAttribute('pathLength', '1');
+    p.style.strokeDasharray = '1';
+    svg.appendChild(p);
+  }
+  sc.appendChild(svg);
+  items.push({ el: svg, t0, dur, kind: 'draw', fn: opt.fn });
+  return svg;
+}
+
+// ---------- 鉛筆・水彩・スケッチブック ----------
+(function filters() {
+  const d = document.createElement('div');
+  d.innerHTML = `<svg width="0" height="0" style="position:absolute">
+    <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3"/>
+      <feDisplacementMap in="SourceGraphic" scale="3.2"/></filter>
+    <filter id="wcf" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="8" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="16"/><feGaussianBlur stdDeviation="2.2"/></filter></svg>`;
+  document.body.appendChild(d);
+})();
+const LOGO_NAVY = "__LOGO_NAVY__";
+// スケッチブックの紙（場面の背景を黒板から紙に替える）
+function paper(sc) {
+  const p = document.createElement('div');
+  p.className = 'paper';
+  sc.appendChild(p);
+  for (let i = 0; i < 16; i++) { const r = document.createElement('div'); r.className = 'ring'; r.style.left = (160 + i * 104) + 'px'; sc.appendChild(r); }
+  const lg = document.createElement('img'); lg.src = LOGO_NAVY;
+  lg.style.cssText = 'position:absolute;right:110px;top:88px;height:46px;opacity:.9';
+  sc.appendChild(lg);
+  sc.dataset.paper = '1';
+  return p;
+}
+// 紙に書く文字（インク）
+function ink(sc, text, x, y, size, t0, dur, opt = {}) {
+  const el = chalk(sc, text, x, y, size, t0, dur, opt);
+  el.className = 'ink' + (opt.or ? ' or' : '');
+  return el;
+}
+// 鉛筆で線を描く。shapes を順番になぞり、鉛筆の先が線の先についていく
+function sketch(sc, x, y, w, h, shapes, t0, dur, opt = {}) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'sk'); svg.setAttribute('width', w); svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.style.left = (BX + x) + 'px'; svg.style.top = (BY + y) + 'px';
+  const paths = shapes.map(s => {
+    const p = document.createElementNS(ns, 'path');
+    p.setAttribute('d', s.d || s);
+    if (s.w) p.style.strokeWidth = s.w;
+    if (s.c) p.style.stroke = s.c;
+    svg.appendChild(p);
+    return p;
+  });
+  sc.appendChild(svg);
+  const lens = paths.map(p => p.getTotalLength());
+  const total = lens.reduce((a, b) => a + b, 0);
+  paths.forEach((p, i) => { p.style.strokeDasharray = `${lens[i]} ${lens[i] + 10}`; p.style.strokeDashoffset = String(lens[i]); });
+  const pen = document.createElement('div');
+  pen.className = 'pencil';
+  pen.innerHTML = `<svg width="160" height="160" viewBox="0 0 160 160" style="position:absolute;left:0;top:-150px;overflow:visible">
+    <g transform="rotate(-38 0 150)"><polygon points="0,150 9,126 -9,126" fill="#E8C9A0"/><polygon points="0,150 3,142 -3,142" fill="#333"/>
+    <rect x="-9" y="20" width="18" height="106" fill="#F2B632"/><rect x="-9" y="20" width="6" height="106" fill="#F7CD5E"/>
+    <rect x="-9" y="8" width="18" height="14" fill="#B8B8B8"/><rect x="-9" y="-6" width="18" height="15" rx="4" fill="#E88A8A"/></g></svg>`;
+  sc.appendChild(pen);
+  items.push({ el: svg, t0, dur, kind: 'custom', fn: (p, e) => {
+    let done = total * p, tip = null;
+    paths.forEach((pa, i) => {
+      const d = Math.max(0, Math.min(lens[i], done));
+      pa.style.strokeDashoffset = String(lens[i] - d);
+      if (done > 0 && done <= lens[i] && !tip) tip = [pa, d];
+      done -= lens[i];
+    });
+    e.style.opacity = p > 0 ? '1' : '0';
+    if (tip && p < 1) {
+      const pt = tip[0].getPointAtLength(tip[1]);
+      pen.style.left = (BX + x + pt.x) + 'px'; pen.style.top = (BY + y + pt.y) + 'px'; pen.style.opacity = '1';
+    } else pen.style.opacity = '0';
+  } });
+  return svg;
+}
+// 水彩で色を置く（にじんだ形がふわっと広がる）
+function wash(sc, x, y, w, h, d, color, t0, dur, alpha = 0.55) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'wc'); svg.setAttribute('width', w); svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.style.left = (BX + x) + 'px'; svg.style.top = (BY + y) + 'px';
+  const p = document.createElementNS(ns, 'path');
+  p.setAttribute('d', d); p.setAttribute('fill', color); p.setAttribute('filter', 'url(#wcf)');
+  svg.appendChild(p);
+  sc.insertBefore(svg, sc.querySelector('svg.sk') || null);
+  items.push({ el: svg, t0, dur, kind: 'custom', fn: (q, e) => {
+    e.style.opacity = String(alpha * easeOut(q));
+    e.style.clipPath = `inset(0 ${100 - 100 * easeOut(Math.min(1, q * 1.4))}% 0 0)`;
+  } });
+  return svg;
+}
+
+// ---------- 黒板のチョークの粉（固定の乱数で毎回同じ） ----------
+(function dust() {
+  const c = document.getElementById('dust').getContext('2d');
+  const r = rnd(7);
+  for (let i = 0; i < 9000; i++) {
+    c.fillStyle = `rgba(255,255,255,${0.012 + r() * 0.03})`;
+    c.fillRect(r() * 1752, r() * 752, 1 + r() * 2, 1 + r() * 2);
+  }
+  for (let i = 0; i < 26; i++) {            // うっすら消した跡
+    c.fillStyle = `rgba(255,255,255,${0.012 + r() * 0.015})`;
+    c.beginPath();
+    c.ellipse(r() * 1752, r() * 752, 120 + r() * 260, 20 + r() * 40, r() * 0.6 - 0.3, 0, Math.PI * 2);
+    c.fill();
+  }
+})();
+
+// ---------- 場面ごとの絵（scenes/*.js から差し込む） ----------
+__SCENES__
+
+// ---------- 時間で動かす ----------
+const sceneNames = Object.keys(T.scenes);
+function applyItem(it, t) {
+  const p = clamp((t - it.t0) / it.dur);
+  const e = it.el;
+  const base = it.center ? 'translateX(-50%) ' : '';
+  if (it.kind === 'write') {
+    e.style.clipPath = `inset(-20% ${100 - p * 100}% -20% -2%)`;
+    e.style.opacity = p > 0 ? '1' : '0';
+  } else if (it.kind === 'pop') {
+    const q = easeBack(p);
+    e.style.opacity = String(clamp(p * 3));
+    e.style.transform = base + `scale(${0.4 + 0.6 * q})`;
+  } else if (it.kind === 'fade') {
+    e.style.opacity = String(easeOut(p));
+  } else if (it.kind === 'draw') {
+    e.querySelectorAll('path').forEach(pa => { pa.style.strokeDashoffset = String(1 - p); });
+    e.style.opacity = p > 0 ? '1' : '0';
+  } else if (it.kind === 'none') {
+  } else if (it.kind === 'custom') {
+    it.fn(p, e, t);
+  }
+}
+function setCaption(t) {
+  let cur = null;
+  for (const l of T.lines) if (t >= l.start - 0.05 && t < l.end + 0.25) cur = l;
+  const cap = document.getElementById('caption');
+  if (!cur) { cap.style.opacity = '0'; return; }
+  cap.style.opacity = '1';
+  const who = document.getElementById('who');
+  who.className = cur.spk;
+  document.getElementById('whoname').textContent = cur.spk === 'N' ? '三浦' : '受講生';
+  const ln = document.getElementById('line');
+  ln.textContent = cur.text;
+  ln.style.fontSize = (cur.text.length > 66 ? 36 : cur.text.length > 52 ? 40 : 44) + 'px';
+  const talking = t < cur.end;
+  document.querySelectorAll('#bars i').forEach((b, i) => {
+    const h = talking ? 8 + 16 * Math.abs(Math.sin(t * (9 + i * 3) + i * 1.3)) : 6;
+    b.style.height = h + 'px';
+  });
+}
+__CHARS__
+
+window.seek = function (t) {
+  // 場面の切り替え（前の場面を消しながら次を出す）
+  sceneNames.forEach((n, i) => {
+    const s = T.scenes[n];
+    const start = s.start - 0.4;
+    const next = i + 1 < sceneNames.length ? T.scenes[sceneNames[i + 1]].start - 0.4 : 1e9;
+    let o = 0;
+    if (t >= start && t < next) o = clamp((t - start) / 0.4);
+    else if (t >= next && t < next + 0.4) o = 1 - clamp((t - next) / 0.4);
+    if (i === 0 && t < start && !T.intro) o = 1;
+    scenes[n].style.opacity = String(o);
+    scenes[n].style.visibility = o > 0 ? 'visible' : 'hidden';
+  });
+  // 紙の場面のあいだは、黒板用の白いロゴを隠す（紙には紺のロゴが出る）
+  let pv = 0;
+  sceneNames.forEach(n => { if (scenes[n].dataset.paper) pv = Math.max(pv, Number(scenes[n].style.opacity)); });
+  document.getElementById('logo').style.opacity = String(0.9 * (1 - pv));
+  items.forEach(it => applyItem(it, t));
+  if (window.setCards) setCards(t);
+  setCaption(t);
+  setCharacters(t);
+};
+// ---------- オープニングとエンディングの画面 ----------
+const CARDS = {};
+(function makeCards() {
+  const stage = document.getElementById('stage');
+  const logoW = document.getElementById('logo').src;
+  if (T.intro) {
+    const c = document.createElement('div'); c.className = 'card';
+    c.innerHTML = `<img src="${logoW}" style="position:absolute;left:50%;top:210px;height:92px;transform:translateX(-50%)">
+      <div class="chalk" id="cSeries" style="left:960px;top:360px;font-size:40px;transform:translateX(-50%)">${T.series || ''}</div>
+      <div class="chalk or" id="cNum" style="left:960px;top:440px;font-size:70px;transform:translateX(-50%)">${T.number || ''}</div>
+      <div class="chalk" id="cTitle" style="left:960px;top:540px;font-size:96px;transform:translateX(-50%)">${T.title || ''}</div>
+      <svg id="cLine" width="1000" height="40" style="position:absolute;left:460px;top:680px;overflow:visible"><path d="M10 20 C 300 5, 700 35, 990 15" pathLength="1" stroke="#F4A765" stroke-width="7" fill="none" stroke-linecap="round" style="stroke-dasharray:1"/></svg>`;
+    stage.appendChild(c); CARDS.intro = c;
+  }
+  if (T.outro) {
+    const c = document.createElement('div'); c.className = 'card';
+    c.innerHTML = `<div class="chalk" style="left:960px;top:360px;font-size:80px;transform:translateX(-50%)">ご視聴ありがとうございました</div>
+      <div class="chalk or" style="left:960px;top:490px;font-size:44px;transform:translateX(-50%)">${T.next || ''}</div>
+      <img src="${logoW}" style="position:absolute;left:50%;top:640px;height:84px;transform:translateX(-50%)">`;
+    stage.appendChild(c); CARDS.outro = c;
+  }
+})();
+window.setCards = function (t) {
+  if (CARDS.intro) {
+    const I = T.intro, c = CARDS.intro;
+    c.style.opacity = String(1 - clamp((t - (I - 0.8)) / 0.8));
+    c.style.visibility = t < I ? 'visible' : 'hidden';
+    const w = (id, a, d) => { const e = c.querySelector(id); const p = clamp((t - a) / d); e.style.clipPath = `inset(-20% ${100 - 100 * p}% -20% -2%)`; };
+    w('#cSeries', 0.4, 1.4); w('#cNum', 1.4, 0.6); w('#cTitle', 2.0, 1.8);
+    c.querySelector('#cLine path').style.strokeDashoffset = String(1 - clamp((t - 3.6) / 0.9));
+  }
+  if (CARDS.outro) {
+    const c = CARDS.outro, o = clamp((t - T.outro) / 0.8);
+    c.style.opacity = String(o); c.style.visibility = o > 0 ? 'visible' : 'hidden';
+  }
+};
+window.DURATION = T.duration;
+window.warmup = async function () {
+  items.forEach(it => { it.el.style.opacity = '1'; it.el.style.clipPath = 'none'; });
+  document.querySelectorAll('.scene').forEach(s => { s.style.opacity = '1'; s.style.visibility = 'visible'; });
+  document.getElementById('line').textContent = T.lines.map(l => l.text).join('');
+  document.getElementById('whoname').textContent = '三浦受講生';
+  await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 300));
+  await document.fonts.ready;
+  window.seek(0);
+  return true;
+};
+</script>
+</body>
+</html>

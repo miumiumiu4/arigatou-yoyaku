@@ -1,0 +1,4 @@
+*_work/
+*.mp4
+*.pptx
+__pycache__/

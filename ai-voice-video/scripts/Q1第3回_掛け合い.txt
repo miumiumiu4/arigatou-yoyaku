@@ -1,0 +1,258 @@
+# Q1第3回「お金と時期の不安の正体」全編（スライド1〜15）を二人の掛け合いにしたもの
+# 形式：話者 | 演技の指示（Gemini TTS にそのまま渡す短い英語） | セリフ
+# 話者：N＝語り手（ありがとうグループの三浦）、L＝聞き手（受講生。相づちと短い質問だけ）
+# 元の台本：Googleドライブ「エバー講座_Q1第3回_台本」。数字・事実・面談での言葉は元の台本のまま
+# スライド10の[三浦が確認：加盟で手に入るもの]は、記入が来るまで読まない
+# 「# wait: 秒」は、直前のセリフのあとに足す間（呼吸の実演で使う）
+
+# scene: title
+N | warm, calm | こんにちは。三浦です。第3回を始めます。
+L | bright | よろしくお願いします！
+N | warm, checking in | 前回の「止まり方診断」、やってみて、どうでしたか？
+L | honest, small laugh | 理由探しに、しっかりチェックが入りました。
+N | clear | これまで面談をしてきて、いちばん多く出てくる止まり方があります。それが、お金と時期の不安です。
+N | quoting, inner voice | 「お金が貯まったら」。「今はタイミングじゃない」。「そんなお金、払う余裕ないからやめとけ」。
+N | clear, intriguing | 今日は、この声の正体と、付き合い方をお話しします。
+
+# scene: defense
+N | calm | 新しいことをしようとすると、頭の中で声がします。「やめとけ」「危ないぞ」「今じゃない」。
+L | nodding | 毎日、聞こえます。
+N | clear | 私たちは、これを「防衛反応」と呼んでいます。
+N | reassuring | 防衛反応は、性格の問題ではありません。自分の命を守るための、正常な機能です。
+N | explaining | 人間の脳は、大昔から、知らないこと、新しいことを「危険」と受け取ってきました。知らない場所に行けば、命を落とすかもしれなかったからです。
+N | clear | だから、独立のような新しい一歩の前には、必ずブレーキがかかります。
+L | realizing | 自分が弱いから、じゃないんですね。
+N | warm, reassuring | そうです。ブレーキがかかるのは、あなたが弱いからではありません。脳がちゃんと働いている証拠です。
+
+# scene: guard
+N | warm, light | 防衛反応は、悪者ではありません。過保護な守衛さんだと思ってください。
+L | surprised, amused | 守衛さん、ですか。
+N | warm | あなたを守ろうとしてくれているだけです。だったら、別に追い出す必要はありませんよね。
+N | serious | 問題は、防衛反応が出ることではありません。それに気づかずに、声をそのまま信じ続けることです。
+N | serious, heavy | 「やめとけ」と言われたから、やめる。それを何年も繰り返していると、同じ冬が毎年来て、同じ夏が毎年来ます。
+
+# scene: story
+N | storytelling | ある面談の話をします。
+N | storytelling | 30代の男性で、ハウスクリーニング系の事業を始めて数か月。スタッフもいて、奥さんと小さなお子さんがいました。
+N | storytelling | 赤字や利幅の少なさに腹が立つとき、どんな自分が出てきますか、と聞くと、彼はこう答えました。
+N | quoting, tired | 「余裕のない自分ですね」。「今本当に余裕がないカツカツで」。
+L | worried | 苦しいですね……。
+N | storytelling | 3日後、一緒にロードマップを作っていたとき、加盟金の話になりました。私は聞きました。「今、防衛反応は、何て言ってますか？」
+N | quoting, inner voice | 彼は、頭の中の声をそのまま口にしました。「300万も払う余裕ないからやめとけって言ってます」
+N | amused, warm | 私は思わず言いました。「めっちゃ戦ってますね」。
+L | curious | その人、どうしたんですか？
+N | intriguing | このあと彼がどうしたか。それは、今日お伝えする扱い方を見てから、お話しします。
+
+# scene: handle1
+N | clear | では、防衛反応の扱い方です。
+N | clear | 1つめ。体で気づく。考えるより先に、感情が動いています。そして感情より先に、体が反応しています。
+N | explaining | 不安や怖さは胸に、怒りは頭に出やすいです。まずは、気づくだけでいい。
+N | clear | 2つめ。認める。「あ、出てきたな」と言ってあげてください。抑え込もうとすると、かえって大きくなります。
+L | surprised | 抑えると、大きくなるんですか。
+N | gentle | 3つめ。寄り添う。おへその下あたり、お腹の底から、胸にいる感情に向けて、「今そう感じたんだね」と言ってあげてください。
+N | warm, gentle | 「そりゃ怖いよな。ずっと守ってくれたもんな」。そうやって寄り添うと、声は少しずつ落ち着いていきます。
+N | firm, kind | 頭だけで言葉を唱えると、感情がぶり返します。お腹の底から、というのがポイントです。
+
+# scene: handle2
+N | clear | 4つめ。書き出します。紙でもスマホでも、かまいません。
+N | clear | 感情は、1から10の数字にします。「今の不安は7くらい」というように。
+N | clear | 問題は、言葉にします。「お金が足りないかもしれない」「失敗したら家族に申し訳ない」。
+N | encouraging | そして最後に、反対側の言葉に言い換えます。「できるのかな？」を、「挑戦する自分は、もう一歩目を踏み出している」に。
+L | realizing | 言い方ひとつで、ずいぶん変わりますね。
+N | insightful | 書き出すと、頭の中でぐるぐる回っていたものが、外に出ます。外に出たものは、客観的に見られます。
+N | insightful, confident | 問題は、言葉になった瞬間に、解決策も、そこに見えてくるんです。
+
+# scene: handle3
+N | clear | 5つめ。名前を付けます。さっきの方は、「余裕のない自分」と名付けました。名前は、自分の口から出てきた言葉が、いちばんです。
+N | important | 6つめ。ここが大事です。直そうとするのではなく、出番を決めます。
+N | warm, light | 「余裕のない自分」は、実はとても優秀です。お金の心配をして、細かく数字を見てくれる。点検係としては、超一流なんです。
+L | surprised, amused | 点検係！
+N | clear | だから、見積もりや、月末の数字の確認、支払いのチェックでは、出番100%。思いきり働いてもらいます。
+N | clear, firm | でも、商談や値決め、挑戦の一歩目。稼ぐ場面では、出番0%です。代わりに、「チャレンジャーな自分」に出てもらいます。
+N | warm, light | 7つめ。声をかけます。「今日は出番なし。点検の日にまた頼むね」。そう言って、持ち場に戻ってもらうんです。
+
+# scene: after
+N | storytelling | さっきの面談の続きです。
+N | storytelling | 「300万も払う余裕ないからやめとけ」。彼はこの声を、防衛反応の声だと分けて見ました。
+N | storytelling | そのうえで、一緒に資金の選択肢を並べました。そして、公的な融資を使って進めたい、と話し、その場で、相談に行く日まで決めました。
+N | quoting, bright | 「水曜日の朝一なら行ける」と。
+L | impressed | その日のうちに、決めたんですね！
+N | warm, firm | 声は消えていません。不安も、ゼロにはなっていません。それでも、決める役を、防衛反応から自分に取り戻した。それだけで、人は動けるんです。
+
+# scene: breath
+N | gentle, inviting | ここで一度、一緒にやってみましょう。防衛反応が強く出たときに、体を落ち着かせる方法です。
+L | bright | やってみます。
+N | calm, slow, soft | 目を閉じてください。
+N | calm, slow, guiding | 鼻から、4秒吸います。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, slow, guiding | 口から、4秒吐きます。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, slow | これを、あと2回。
+N | calm, slow, guiding | 鼻から、4秒吸います。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, slow, guiding | 口から、4秒吐きます。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, slow, guiding | 鼻から、4秒吸います。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, slow, guiding | 口から、4秒吐きます。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1
+# wait: 0.45
+N | calm, counting slowly | 2
+# wait: 0.45
+N | calm, counting slowly | 3
+# wait: 0.45
+N | calm, counting slowly | 4
+# wait: 0.45
+N | calm, soft | はい、目を開けてください。
+N | warm | 少し、体がゆるんだでしょうか。不安が強いときは、考える前に、まず呼吸です。
+L | relieved | 肩の力が、抜けました。
+
+# scene: money
+N | clear | 次は、お金の不安そのものを見ていきます。
+N | clear | 面談で「お金が不安です」と言われると、私は必ず聞き返します。「お金が、何ですか？」
+N | clear, steady | 稼げないのか。貯められないのか。使ってしまうのか。同じ「お金」でも、中身がまったく違います。中身が分からないまま悩んでも、答えは出ません。
+L | thinking | たしかに、ひとまとめにしていました。
+N | clear | もう1つ、大事な考え方があります。投資と出費を分けることです。判断の基準は、1つだけ。回収期間が読めるかどうか。
+N | explaining | 返しながら手元が増えていく設計になっているお金は、出費ではなく投資です。回収の予定がないお金は、出費です。
+N | amused, insightful | 面白いことに、人は車や買い物には痛みを感じないのに、自分への投資には痛みを感じます。
+N | confident | 回収の設計図が先にあってのお金の話。この順番なら、怖くありません。
+N | sincere | 最初にご紹介した方が口にした「300万」も、同じです。これは、ありがとうグループに加盟するときにかかるお金です。
+N | sincere, firm | 大きな金額です。だからこそ、何が手に入って、どうやって回収していくのかを、先に見てほしいんです。
+N | encouraging | 払うお金だけを見ると、怖くなります。手に入るものと、回収の道筋を一緒に見ると、それは投資に変わります。
+
+# scene: timing
+N | clear | 次は、時期の不安です。「今はタイミングじゃない」「来年から」。よく聞く言葉です。
+L | embarrassed, small laugh | 耳が痛いです。
+N | clear, warm | 私は、始める時期は、いつでもいいと思っています。大事なのは、時期より順序です。何を先にやって、何を後にするか。
+N | serious | ただ、順序を決めずに「そのうち」と待っていると、解決策を探さないまま、同じ冬が毎年来て、同じ夏が毎年来ます。それを何回も繰り返してしまう。
+N | reassuring | これは、能力の問題ではありません。相談する相手と、順序が決まっていないだけです。
+N | encouraging | ゴールを決めて、そこから逆算してみてください。階段が全部言葉になっていれば、一歩目は迷いません。
+N | encouraging, confident | そして、たいてい、最初の一歩は「今日」になります。
+L | surprised | 今日、ですか！
+
+# scene: date
+N | storytelling | 開業して間もない、一人で仕事をしている男性の話です。次にやりたい事業があって、その準備にお金が要る。
+N | quoting, uncertain | 彼は、こう言いました。「資金貯まんなかったら、もしかしたら一年ずれるかもしれない」
+N | storytelling | そこで、一緒に、前回話してくれた理想に、日付と数字を入れていきました。
+N | clear, steady | 利益で月いくらを、何年何月に達成しているか。そのとき、何人体制か。次の目標の準備は、何年何月か。
+N | light, amused | 「7月に、どこかのカフェで会いましょう」。これだけだと、私たちは一生会えません。
+L | laughing softly | 会えないですね。
+N | confident | でも、日付と時間と場所まで言葉になっていれば、必ず会えます。目標も同じです。数字と日付まで言葉になっていれば、たどり着けます。
+N | warm | そして彼は、融資についても、「だめもとでやってみるか」と考え始めました。
+
+# scene: plan
+N | clear | 最後に、お金と時期の不安を小さくする方法を、お伝えします。
+N | clear | まず、独立に必要なお金を、年ごとに、理由つきで書いてください。1年後にいくら、3年後にいくら。なぜその金額が必要なのか。
+N | clear | ぼんやりした「お金が足りない」が、具体的な数字に変わります。
+N | calm | 次に、避けたいこと、最悪の事態を、先に書き出します。お客様が来なかったら。体を壊したら。家族に反対されたら。
+L | worried | 考えるだけで、怖いです。
+N | reassuring | そして、それぞれに「そうなったら、こうする」を決めておきます。最悪の事態が「想定内」になると、脳は安心して、ブレーキをゆるめてくれます。
+N | clear, firm | それから、使ってよいお金の額、試す期間、やめる基準も、先に決めておく。そうすれば、「お金が貯まるまで待つ」必要はなくなります。
+N | serious | 待っているあいだにも、機会は通り過ぎていくからです。
+
+# scene: work
+N | bright, clear | では、今日のワークです。ワークシートの「お金と時期の不安を外す」を開いてください。
+N | clear | 1つめ。頭の中の防衛反応の声を、そのまま書いてください。その声に名前を付けて、出番0%の場面と100%の場面を書きます。
+N | clear | 2つめ。独立に必要なお金を、年ごとに、理由つきで書きます。
+N | clear | 3つめ。資金の選択肢を並べます。自己資金、分割、融資。ほかにもあれば書いてください。
+N | clear | 4つめ。避けたいことを書き出して、「そうなったら、こうする」を決めます。
+N | clear, firm | 5つめ。日付を決めます。いつまでに、何をするか。1つでいいので、日付を入れてください。
+L | determined | 1つ、日付を入れてみます。
+
+# scene: next
+N | warm, wrapping up | 第3回は以上です。今日は、頭の中の「やめとけ」の正体と、付き合い方をお話ししました。
+N | warm, memorable | 防衛反応は、追い出さなくていい。出番を決めてあげればいい。
+N | intriguing | 次の第4回は、「決める技術」です。
+N | clear | 正しい答えが分かるまで決められない。一度決めたら変えられない気がして、決められない。
+L | nodding, honest | それ、まさに私です。
+N | encouraging | そんな方に、決めることが、ぐっと軽くなる考え方をお伝えします。
+N | warm, closing | では、第4回でお会いしましょう。三浦でした。
