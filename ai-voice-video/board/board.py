@@ -56,17 +56,40 @@ def tts_line(line):
     return x.astype(np.float32) / 32768.0
 
 
-# Gemini の声の設定（AI Studio の「Get code」に出るモデル名と、選んだ声の名前を環境変数で渡す）
-#   GEMINI_TTS_MODEL … モデル名（推測で書かない。AI Studio で確認した文字列）
-#   GEMINI_VOICE_N / GEMINI_VOICE_L … 語り手（三浦役）／聞き手（受講生役）の声の名前
+# Gemini の声の設定。必要なのは GEMINI_API_KEY だけ。ほかは省略できる
+#   GEMINI_TTS_MODEL … モデル名。なければ、キーで使えるモデルの一覧から「tts」の付いたものを自動で選ぶ
+#   GEMINI_VOICE_N / GEMINI_VOICE_L … 語り手（三浦役）／聞き手（受講生役）の声の名前。なければ下の初期値
 GEMINI_CACHE = os.path.join(HERE, ".tts_cache")   # 同じセリフを二度お金をかけて作らない
+GEMINI_VOICE_DEFAULT = {"N": "Charon", "L": "Puck"}
+_gemini_model = None
+
+
+def gemini_model():
+    """使う TTS モデル名。環境変数がなければ ListModels から選ぶ（pro より flash を優先＝安い）。"""
+    global _gemini_model
+    if _gemini_model:
+        return _gemini_model
+    _gemini_model = os.environ.get("GEMINI_TTS_MODEL")
+    if not _gemini_model:
+        import urllib.request
+        req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000",
+                                     headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            names = [m["name"].split("/")[-1] for m in json.load(r).get("models", [])
+                     if "tts" in m["name"] and "generateContent" in m.get("supportedGenerationMethods", [])]
+        if not names:
+            raise SystemExit("このキーで使える Gemini の TTS モデルが見つかりません")
+        names.sort(key=lambda n: ("pro" in n, n))   # flash（安い方）を先に
+        _gemini_model = names[0]
+        print("Gemini のモデル:", _gemini_model, "（候補:", ", ".join(names), "）")
+    return _gemini_model
 
 
 def gemini_tts(text, direction, spk):
     import hashlib
     import urllib.request
-    model = os.environ["GEMINI_TTS_MODEL"]
-    voice = os.environ["GEMINI_VOICE_" + spk]
+    model = gemini_model()
+    voice = os.environ.get("GEMINI_VOICE_" + spk) or GEMINI_VOICE_DEFAULT[spk]
     prompt = f"Read the following Japanese line in a {direction} tone, naturally, as a spoken lecture: {text}"
     key = hashlib.sha256(f"{model}|{voice}|{prompt}".encode()).hexdigest()[:24]
     os.makedirs(GEMINI_CACHE, exist_ok=True)
