@@ -283,6 +283,7 @@ def main():
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--span", help="一部分だけ書き出す 開始秒,終了秒（見本用）")
     ap.add_argument("--preview", help="確認用に静止画だけ書き出す秒数（カンマ区切り）")
+    ap.add_argument("--audio-only", action="store_true", help="動画は作らず、音声（MP3）だけ書き出す")
     a = ap.parse_args()
     outdir = os.path.abspath(a.name + "_work")
     os.makedirs(outdir, exist_ok=True)
@@ -293,6 +294,11 @@ def main():
     duration = build_audio(lines, wav, a.bgm, a.bgm_level, a.opening, intro, a.ending, outro)
     meta = {"intro": intro, "outro": round(duration - outro, 3) if outro else 0,
             "series": a.series, "number": a.number, "title": a.title, "next": a.next}
+    if a.audio_only:
+        mp3 = os.path.abspath(a.name + ".mp3")
+        subprocess.run([FFMPEG, "-y", "-loglevel", "error", "-i", wav, "-ac", "1", "-b:a", "128k", mp3], check=True)
+        print(f"長さ {duration:.1f}秒、{len(lines)}行 → {mp3}")
+        return
     tl = timeline(lines, duration, meta)
     json.dump(tl, open(os.path.join(outdir, "timeline.json"), "w"), ensure_ascii=False, indent=1)
     html = os.path.join(HERE, "_render.html")   # フォント（node_modules）を読むため、このフォルダに置く
