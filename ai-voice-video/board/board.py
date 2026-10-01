@@ -103,7 +103,8 @@ def gemini_request(req, tries=8):
                 raise SystemExit("Gemini の1日の上限に達しました。明日もう一度実行すると、作った分の続きから作ります")
             m = re.search(r'"retryDelay": "(\d+)', body)
             wait = int(m.group(1)) + 2 if m else 20 * (i + 1)
-            print(f"  Gemini の回数制限（{e.code}）。{wait}秒待ってやり直します", flush=True)
+            why = "回数制限" if e.code == 429 else "混雑"
+            print(f"  Gemini の{why}（{e.code}）。{wait}秒待ってやり直します", flush=True)
             time.sleep(wait)
 
 
@@ -112,7 +113,9 @@ def gemini_tts(text, direction, spk):
     import urllib.request
     model = gemini_model()
     voice = os.environ.get("GEMINI_VOICE_" + spk) or GEMINI_VOICE_DEFAULT[spk]
-    prompt = f"Read the following Japanese line in a {direction} tone, naturally, as a spoken lecture: {text}"
+    # 演技の指示は渡さず、セリフだけを読ませる。英語の指示も日本語の（かっこ書き）も、
+    # このモデルは指示の文まで読み上げてしまい、systemInstruction も使えない（10/1 確認）
+    prompt = text
     key = hashlib.sha256(f"{model}|{voice}|{prompt}".encode()).hexdigest()[:24]
     os.makedirs(GEMINI_CACHE, exist_ok=True)
     cache = os.path.join(GEMINI_CACHE, key + ".pcm")
