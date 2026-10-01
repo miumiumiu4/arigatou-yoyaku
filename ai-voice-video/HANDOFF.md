@@ -50,6 +50,15 @@
    - **10/1 全自動にする準備**：Chrome の Claude に `Chrome用プロンプト_まとめて準備_Gemini登録とSuno.md` を渡す。Gemini の環境変数4つと、ネットワークに suno.com・cdn1.suno.ai・cdn2.suno.ai を足してもらう → クラウドの Claude Code が Suno の曲を自分でダウンロードできる（このセッションでは suno は 403 で届かなかった）。曲の取り方：`https://cdn1.suno.ai/{曲のID}.mp3`
 4. ほかの台本（Q1第2〜7回、音声1〜3、Q2音声30本）を `scripts/` に同じ形式で追加して量産する
 
+## 10/1 Gemini の声で Q1第1回の音声づくり（クラウドのセッション）
+
+- 声は三浦さんが耳で選んで決定：**N＝Charon、L＝Leda**（見本は `voice-samples/`）。本人の声（録音・クローン）は使わず AI Studio の声でいく
+- モデル `gemini-3.8-flash-tts` は WAV で返す → `board.py` で中の PCM を取り出すよう対応
+- **演技の指示は渡さない**：英語の指示も日本語の（かっこ書き）も、指示の文まで読み上げてしまう。systemInstruction もこのモデルでは使えない。今はセリフだけを読ませている
+- 無料枠の上限：**1分10回・1日100回（モデルごと）**。158行あるので無料枠だと2〜3日かかる
+- 作った声は `board/.tts_cache/` に保存し、コミットしている（コンテナが消えても作り直しの課金がいらないように）
+- 音声だけ作る：`cd board && GEMINI_VOICE_N=Charon GEMINI_VOICE_L=Leda python3 board.py ../scripts/Q1第1回_掛け合い.txt ../out/Q1第1回_音声 --audio-only --bgm ../music/01_lesson-bgm.mp3 --opening ../music/02_opening.mp3 --ending ../music/03_ending.mp3`（この環境では GEMINI_VOICE_L が Zephyr になっているので必ず指定する）
+
 ## 三浦さんの記入待ち
 
 - Q1第1回：なし（10/1にすべて確定）
