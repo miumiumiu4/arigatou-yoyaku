@@ -120,7 +120,8 @@ def gemini_call(speech_config, prompt):
     """Gemini TTS を1回呼び、24kHz・16bit・モノラルの PCM（バイト列）を返す。"""
     import io
     import urllib.request
-    body = {"contents": [{"parts": [{"text": prompt}]}],
+    parts = prompt if isinstance(prompt, list) else [{"text": prompt}]   # まとめるときは話し手つきの部品のリスト
+    body = {"contents": [{"parts": parts}],
             "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": speech_config}}
     req = urllib.request.Request(
         f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model()}:generateContent",
@@ -213,7 +214,8 @@ def gemini_batch(lines, size=8):
     print(f"まとめて作る：{len(todo)}行 → {-(-len(todo) // size)}回", flush=True)
     for b in range(0, len(todo), size):
         group = todo[b:b + size]
-        prompt = "\n".join(f"{names[l['spk']]}: {l['text']}" for l in group)
+        # このモデルは、セリフごとに「誰が話すか」（speechMetadata.speaker）を付ける形でないと受け付けない
+        prompt = [{"text": l["text"], "speechMetadata": {"speaker": names[l["spk"]]}} for l in group]
         pcm = gemini_call({"multiSpeakerVoiceConfig": {"speakerVoiceConfigs": voices}}, prompt)
         segs = split_by_silence(pcm, [l["text"] for l in group])
         for l, seg in zip(group, segs):
