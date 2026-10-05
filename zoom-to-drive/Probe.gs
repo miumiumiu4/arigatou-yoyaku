@@ -57,3 +57,58 @@ function describe_(json) {
     return k;
   }).join(' / ');
 }
+
+/**
+ * 会社全体の保管庫（/docs/archives）の正しい聞き方を探す試し。
+ * 日付の範囲（from / to）と product の書き方を変えて、順に聞いてみる。データは保存しない。
+ */
+function probeArchives() {
+  const props = PropertiesService.getScriptProperties();
+  const token = zoomToken_(props);
+  const now = new Date();
+  const iso = d => Utilities.formatDate(d, 'UTC', "yyyy-MM-dd'T'HH:mm:ss'Z'");
+  const day = d => Utilities.formatDate(d, 'UTC', 'yyyy-MM-dd');
+  const ago = n => new Date(now.getTime() - n * 24 * 3600 * 1000);
+
+  const candidates = [
+    'from=' + iso(ago(7)) + '&to=' + iso(now) + '&page_size=10',
+    'from=' + iso(ago(7)) + '&to=' + iso(now) + '&page_size=10&products=my_notes',
+    'from=' + iso(ago(7)) + '&to=' + iso(now) + '&page_size=10&product=my_notes',
+    'from=' + day(ago(7)) + '&to=' + day(now) + '&page_size=10',
+    'from=' + iso(ago(30)) + '&to=' + iso(now) + '&page_size=10',
+    'from=' + iso(ago(1)) + '&to=' + iso(now) + '&page_size=10',
+  ];
+
+  candidates.forEach(q => {
+    const res = UrlFetchApp.fetch('https://api.zoom.us/v2/docs/archives?' + q, {
+      headers: { Authorization: 'Bearer ' + token },
+      muteHttpExceptions: true,
+    });
+    const code = res.getResponseCode();
+    let shape = '';
+    try {
+      const json = JSON.parse(res.getContentText());
+      if (code === 200) {
+        shape = '項目: ' + describe_(json) + productCounts_(json);
+      } else {
+        shape = 'エラー: ' + (json.code || '') + ' ' + (json.message || '');
+      }
+    } catch (e) {
+      shape = '（JSONではない応答）';
+    }
+    Logger.log(code + '  /docs/archives?' + q + '  ' + shape);
+  });
+}
+
+/** 一覧の中の product の種類ごとの件数だけを返す（中身は出さない） */
+function productCounts_(json) {
+  const counts = {};
+  Object.keys(json).forEach(k => {
+    if (!Array.isArray(json[k])) return;
+    json[k].forEach(item => {
+      if (item && typeof item === 'object' && item.product) counts[item.product] = (counts[item.product] || 0) + 1;
+    });
+  });
+  const keys = Object.keys(counts);
+  return keys.length ? ' / 種類ごとの件数: ' + keys.map(p => p + '=' + counts[p]).join(', ') : '';
+}
