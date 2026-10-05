@@ -89,7 +89,8 @@ function probeArchives() {
     try {
       const json = JSON.parse(res.getContentText());
       if (code === 200) {
-        shape = '項目: ' + describe_(json) + productCounts_(json);
+        shape = '件数(total_records)=' + json.total_records + ' / data の形=' + dataShape_(json.data)
+          + productCounts_(json);
       } else {
         shape = 'エラー: ' + (json.code || '') + ' ' + (json.message || '');
       }
@@ -103,12 +104,28 @@ function probeArchives() {
 /** 一覧の中の product の種類ごとの件数だけを返す（中身は出さない） */
 function productCounts_(json) {
   const counts = {};
+  const lists = [];
   Object.keys(json).forEach(k => {
-    if (!Array.isArray(json[k])) return;
-    json[k].forEach(item => {
+    if (Array.isArray(json[k])) lists.push(json[k]);
+    else if (json[k] && typeof json[k] === 'object') {
+      Object.keys(json[k]).forEach(k2 => { if (Array.isArray(json[k][k2])) lists.push(json[k][k2]); });
+    }
+  });
+  lists.forEach(list => {
+    list.forEach(item => {
       if (item && typeof item === 'object' && item.product) counts[item.product] = (counts[item.product] || 0) + 1;
     });
   });
   const keys = Object.keys(counts);
   return keys.length ? ' / 種類ごとの件数: ' + keys.map(p => p + '=' + counts[p]).join(', ') : '';
+}
+
+/** data が何の形で返ってきたかだけを返す（中身は出さない） */
+function dataShape_(d) {
+  if (d === null || d === undefined) return String(d);
+  if (Array.isArray(d)) {
+    return '一覧' + d.length + '件' + (d.length && typeof d[0] === 'object' ? '[' + Object.keys(d[0]).join(',') + ']' : '');
+  }
+  if (typeof d === 'object') return '入れ物{' + Object.keys(d).join(',') + '}';
+  return typeof d;
 }
