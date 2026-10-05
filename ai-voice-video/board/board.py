@@ -445,7 +445,7 @@ def main():
             "series": a.series, "number": a.number, "title": a.title, "next": a.next}
     tl = timeline(lines, duration, meta)
     json.dump(tl, open(os.path.join(outdir, "timeline.json"), "w"), ensure_ascii=False, indent=1)
-    html = os.path.join(HERE, "_render.html")   # フォント（node_modules）を読むため、このフォルダに置く
+    html = os.path.join(HERE, f"_render_{os.getpid()}.html")   # フォント（node_modules）を読むため、このフォルダに置く。同時に動かしてもぶつからないよう、名前を分ける
     write_html(tl, html, a.scenes)
     print(f"長さ {duration:.1f}秒、{len(lines)}行、場面 {list(tl['scenes'])}")
     if use_eleven():

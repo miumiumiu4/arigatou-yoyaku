@@ -165,7 +165,7 @@ function draw(sc, x, y, w, h, shapes, t0, dur, opt = {}) {
 (function filters() {
   const d = document.createElement('div');
   d.innerHTML = `<svg width="0" height="0" style="position:absolute">
-    <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3"/>
+    <filter id="rough" filterUnits="userSpaceOnUse" x="-2000" y="-2000" width="6000" height="6000"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3"/>
       <feDisplacementMap in="SourceGraphic" scale="3.2"/></filter>
     <filter id="wcf" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="8" result="n"/>
       <feDisplacementMap in="SourceGraphic" in2="n" scale="16"/><feGaussianBlur stdDeviation="2.2"/></filter></svg>`;
