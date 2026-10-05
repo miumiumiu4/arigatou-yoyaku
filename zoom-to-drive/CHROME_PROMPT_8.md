@@ -18,7 +18,7 @@
 ■ 手順
 
 【A】Apps Script に MyNotes.gs を足す
-1. https://github.com/miumiumiu4/arigatou-yoyaku/blob/claude/stoic-volta-24mepa/zoom-to-drive/MyNotes.gs を開く。上部が「226 lines」前後であることを確かめる
+1. https://github.com/miumiumiu4/arigatou-yoyaku/blob/claude/stoic-volta-24mepa/zoom-to-drive/MyNotes.gs を開く。上部が「214 lines」であることを確かめる
 2. 「Raw」の右隣の、四角が2つ重なったボタン（Copy raw file＝中身をコピー）でコピーする
 3. Apps Script「Zoom書き起こし保存」→ 左の「ファイル」の横の「＋」→「スクリプト」→ 名前を MyNotes にする
 4. できた MyNotes.gs の中身を全部消して貼る → 保存。先頭が「/**」で、一番下が「function shapeOf_」の終わりであることを確かめる
