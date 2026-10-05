@@ -208,9 +208,13 @@ function saveNote_(props, folder, n, content) {
   body.appendParagraph('開始: ' + Utilities.formatDate(start, TZ, 'yyyy-MM-dd HH:mm'));
   body.appendParagraph('ノート名: ' + (n.note_name || ''));
   body.appendParagraph('カレンダーの予定: ' + (event ? event.getTitle() : '（見つからず）'));
-  body.appendParagraph('Zoomのノート: ' + (n.note_link || ''));
+  body.appendParagraph('Zoomのノート: ' + (n.note_link || content.note_url || ''));
   body.appendParagraph('ノートID: ' + n.note_id + ' / 更新: ' + n.modified_time);
   body.appendHorizontalRule();
+  if (content.generated_note_content) {
+    body.appendParagraph('■ 自動の要約').setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    body.appendParagraph(String(content.generated_note_content));
+  }
   body.appendParagraph('■ 自分のメモ').setHeading(DocumentApp.ParagraphHeading.HEADING2);
   body.appendParagraph(memo || '（なし）');
   body.appendParagraph('■ 書き起こし').setHeading(DocumentApp.ParagraphHeading.HEADING2);
@@ -220,27 +224,40 @@ function saveNote_(props, folder, n, content) {
   Logger.log('保存: ' + title);
 }
 
-/** 書き起こしの形が分からないので、よくある形を順に試し、だめなら中身をそのまま書く */
+/** 書き起こしを「時刻 話者: 本文」の行にする。
+ *  My Notes は transcript{items, speakers} の形（items が発言、speakers が話者の名簿）。
+ *  項目名が細かく違っても拾えるよう、よくある名前を順に試し、だめならその行をそのまま書く。 */
 function transcriptText_(content) {
   const t = content.transcript !== undefined ? content.transcript
     : content.meeting_transcript !== undefined ? content.meeting_transcript : null;
   if (t === null || t === undefined) return '';
   if (typeof t === 'string') return t;
+
+  // 話者の名簿（id → 名前）
+  const names = {};
+  (Array.isArray(t.speakers) ? t.speakers : []).forEach(sp => {
+    if (!sp || typeof sp !== 'object') return;
+    const id = sp.speaker_id !== undefined ? sp.speaker_id : sp.id;
+    const name = sp.name || sp.speaker_name || sp.display_name || sp.user_name || '';
+    if (id !== undefined) names[String(id)] = name;
+  });
+
   const list = Array.isArray(t) ? t
+    : Array.isArray(t.items) ? t.items
     : Array.isArray(t.timeline) ? t.timeline
-    : Array.isArray(t.segments) ? t.segments
-    : Array.isArray(t.items) ? t.items : null;
-  if (list) {
-    return list.map(s => {
-      if (typeof s === 'string') return s;
-      const who = s.speaker || s.speaker_name || s.username || s.user_name || '';
-      const when = s.ts || s.timestamp || s.start_time || '';
-      const text = s.text || s.content || s.sentence || '';
-      return [when, who ? who + ':' : '', text].filter(Boolean).join(' ');
-    }).join('\n');
-  }
-  if (t.content && typeof t.content === 'string') return t.content;
-  return JSON.stringify(t, null, 1);
+    : Array.isArray(t.segments) ? t.segments : null;
+  if (!list) return t.content && typeof t.content === 'string' ? t.content : JSON.stringify(t, null, 1);
+
+  return list.map(s => {
+    if (typeof s === 'string') return s;
+    const sid = s.speaker_id !== undefined ? s.speaker_id : s.speaker;
+    const who = (sid !== undefined && names[String(sid)]) || s.speaker_name || s.username || s.user_name
+      || (typeof s.speaker === 'string' ? s.speaker : '') || (sid !== undefined ? '話者' + sid : '');
+    const when = s.start_time || s.ts || s.timestamp || s.start || '';
+    const text = s.text || s.content || s.sentence || s.transcript || '';
+    if (!text) return JSON.stringify(s);
+    return [when, who ? who + ':' : '', text].filter(Boolean).join(' ');
+  }).join('\n');
 }
 
 // ---- Zoom（本人ログイン） ----
