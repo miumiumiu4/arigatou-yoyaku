@@ -50,3 +50,17 @@ Googleドキュメントとして保存します。ファイル名は次の形�
 - `スクリプトプロパティ ... が未設定です` → 手順3の名前の綴りを確認
 - 何も保存されない → その会議がクラウド記録か、文字起こしが有効かを確認。録画直後は文字起こしの完成まで時間がかかります
 - 名前が違う人になる → 同じ時間帯に予定が2つあると、開始時刻が近い方を使います
+
+## My Notes も保存する（MyNotes.gs・本人ログイン型）
+
+会社の鍵（Server-to-Server）では My Notes が読めず、このアカウントには Zoom のアーカイブ機能もないため、
+三浦さん本人の Zoom ログインで読む General App を別に作ります。
+
+1. Apps Script に `MyNotes.gs` を足す
+2. `showMyNotesRedirectUrl` を実行し、出たURLを Zoom の General App の「OAuth Redirect URL」と「Allow List」に入れる
+3. General App のスコープは `my_notes:read:note` と `my_notes:read:content`（:admin なし）
+4. スクリプトプロパティに `ZOOM_USER_CLIENT_ID` / `ZOOM_USER_CLIENT_SECRET` を入れる
+5. `showMyNotesLoginUrl` を実行し、出たURLを開いて Zoom で許可 →「連携できました」
+6. `probeMyNotesUser` で形を確認 → `setupMyNotes` で1時間おきの自動保存を開始（初回は過去分もまとめて保存。5分ごとに区切って次の回に続きを保存）
+
+ファイル名の末尾は `_My Notes`（APIキーがない場合）。あとで書き足されたノートは保存し直します。
