@@ -47,14 +47,19 @@ function myNotesAuthCallback(request) {
   return HtmlService.createHtmlOutput('<p style="font-size:18px">連携できました。このタブは閉じて大丈夫です。</p>');
 }
 
-/** 手順3：ノート一覧とノート1件の「形」だけをログに出す（中身は出さない） */
+/** 手順3：会議の一覧とノートの取り方を確かめ、ノート1件の「形」だけをログに出す（中身は出さない） */
 function probeMyNotesUser() {
   const token = myNotesToken_();
-  const list = zoomUserGet_(token, '/my_notes/notes?page_size=10');
-  Logger.log('一覧: ' + list.code + ' ' + (list.code === 200 ? describe_(list.json) : JSON.stringify(list.json)));
-  const notes = (list.json && list.json.notes) || [];
-  if (!notes.length) return;
-  const c = zoomUserGet_(token, '/my_notes/notes/' + encodeURIComponent(notes[0].note_id) + '/content?include=transcript');
+  const got = listPastMeetings_(30);
+  Logger.log('会議の一覧（直近30日）: ' + got.meetings.length + '件 / 取得元: ' + got.source + (got.note ? ' / ' + got.note : ''));
+  let first = null;
+  for (const m of got.meetings.slice(0, 15)) {
+    const r = notesForMeeting_(token, m, true);
+    if (r.notes.length && !first) first = r.notes[0];
+    if (first) break;
+  }
+  if (!first) { Logger.log('直近の会議15件からはノートが見つかりませんでした'); return; }
+  const c = zoomUserGet_(token, '/my_notes/notes/' + encodeURIComponent(first.note_id) + '/content?include=transcript');
   Logger.log('1件目の中身: ' + c.code + ' ' + (c.code === 200 ? shapeOf_(c.json) : JSON.stringify(c.json)));
 }
 
@@ -68,27 +73,29 @@ function setupMyNotes() {
   runMyNotes();
 }
 
-/** 本体：まだ保存していないノートをドライブに保存する */
+/** 本体：まだ保存していないノートをドライブに保存する
+ *  My Notes の一覧は「会議ごと」にしか取れない（meeting_id が必須）ため、
+ *  会社の鍵で過去の会議の一覧を取り、会議ごとにノートを探す。
+ *  初回は過去365日分、それ以降は直近14日分を見る。 */
 function runMyNotes() {
   const props = PropertiesService.getScriptProperties();
   const folder = DriveApp.getFolderById(mustGet_(props, 'FOLDER_ID'));
   const token = myNotesToken_();
   const started = Date.now();
+  const backfilled = props.getProperty('MYNOTES_BACKFILL_DONE') === '1';
+  const got = listPastMeetings_(backfilled ? 14 : 365);
+  Logger.log('会議 ' + got.meetings.length + '件を確認（取得元: ' + got.source + '）');
 
-  let next = '';
-  do {
-    const list = zoomUserGet_(token, '/my_notes/notes?page_size=50' + (next ? '&next_page_token=' + encodeURIComponent(next) : ''));
-    if (list.code !== 200) throw new Error('ノート一覧の取得に失敗: ' + list.code + ' ' + JSON.stringify(list.json));
-    const notes = list.json.notes || [];
-
+  for (const m of got.meetings) {
+    if (Date.now() - started > 5 * 60 * 1000) {
+      Logger.log('時間切れが近いので、残りは次の回に保存します');
+      return;
+    }
+    const notes = notesForMeeting_(token, m, false).notes;
     for (const n of notes) {
       const doneKey = 'note_' + n.note_id;
       // 一度保存したノートでも、あとで書き足された（更新日時が変わった）ら保存し直す
       if (props.getProperty(doneKey) === String(n.modified_time)) continue;
-      if (Date.now() - started > 5 * 60 * 1000) {
-        Logger.log('時間切れが近いので、残りは次の回に保存します');
-        return;
-      }
       const c = zoomUserGet_(token, '/my_notes/notes/' + encodeURIComponent(n.note_id) + '/content?include=transcript');
       if (c.code !== 200) {
         Logger.log('中身の取得に失敗（飛ばします）: ' + n.note_name + ' ' + c.code);
@@ -97,8 +104,91 @@ function runMyNotes() {
       saveNote_(props, folder, n, c.json);
       props.setProperty(doneKey, String(n.modified_time));
     }
-    next = list.json.next_page_token || '';
+  }
+  if (!backfilled) {
+    props.setProperty('MYNOTES_BACKFILL_DONE', '1');
+    Logger.log('過去分の保存が終わりました。次からは直近14日分だけを見ます');
+  }
+}
+
+// ---- 会議の一覧（会社の鍵で取る） ----
+
+/** 過去 days 日の会議を返す。使える方法を順に試す：①利用状況レポート ②過去の会議一覧 ③クラウド録画 */
+function listPastMeetings_(days) {
+  const props = PropertiesService.getScriptProperties();
+  const s2s = zoomToken_(props);
+  const user = encodeURIComponent(mustGet_(props, 'ZOOM_USER_EMAIL'));
+  const now = new Date();
+  const notes = [];
+
+  // ① レポート（1回に30日までなので区切って聞く）
+  const report = [];
+  let reportOk = true;
+  for (let end = now; end > new Date(now.getTime() - days * 864e5) && reportOk; end = new Date(end.getTime() - 30 * 864e5)) {
+    const from = new Date(Math.max(end.getTime() - 30 * 864e5, now.getTime() - days * 864e5));
+    let next = '';
+    do {
+      const r = zoomUserGet_(s2s, '/report/users/' + user + '/meetings?type=past&page_size=300'
+        + '&from=' + Utilities.formatDate(from, TZ, 'yyyy-MM-dd') + '&to=' + Utilities.formatDate(end, TZ, 'yyyy-MM-dd')
+        + (next ? '&next_page_token=' + encodeURIComponent(next) : ''));
+      if (r.code !== 200) { reportOk = false; notes.push('レポート ' + r.code + ' ' + (r.json && r.json.message)); break; }
+      (r.json.meetings || []).forEach(m => report.push(m));
+      next = r.json.next_page_token || '';
+    } while (next);
+  }
+  if (reportOk) return { meetings: uniqueMeetings_(report), source: 'レポート', note: '' };
+
+  // ② 過去の会議一覧
+  const prev = [];
+  let next = '';
+  let prevOk = true;
+  do {
+    const r = zoomUserGet_(s2s, '/users/' + user + '/meetings?type=previous_meetings&page_size=300'
+      + (next ? '&next_page_token=' + encodeURIComponent(next) : ''));
+    if (r.code !== 200) { prevOk = false; notes.push('過去の会議 ' + r.code + ' ' + (r.json && r.json.message)); break; }
+    (r.json.meetings || []).forEach(m => prev.push(m));
+    next = r.json.next_page_token || '';
   } while (next);
+  if (prevOk) {
+    const since = now.getTime() - days * 864e5;
+    return { meetings: uniqueMeetings_(prev.filter(m => !m.start_time || new Date(m.start_time).getTime() >= since)), source: '過去の会議一覧', note: notes.join(' / ') };
+  }
+
+  // ③ クラウド録画（録画した会議だけ）
+  const recs = listRecordings_(s2s, mustGet_(props, 'ZOOM_USER_EMAIL'), new Date(now.getTime() - Math.min(days, 30) * 864e5), now);
+  return { meetings: uniqueMeetings_(recs), source: 'クラウド録画のみ', note: notes.join(' / ') };
+}
+
+function uniqueMeetings_(list) {
+  const seen = {};
+  return list.filter(m => {
+    const k = m.uuid || String(m.id);
+    if (seen[k]) return false;
+    seen[k] = true;
+    return true;
+  }).sort((a, b) => new Date(b.start_time || 0) - new Date(a.start_time || 0));
+}
+
+/** 会議1件のノートを取る。meeting_id は「UUID」か「会議ID」のどちらで通るか分からないので、両方試して通った方を覚える */
+function notesForMeeting_(token, m, verbose) {
+  const props = PropertiesService.getScriptProperties();
+  const uuidForm = m.uuid ? (/^\/|\/\//.test(m.uuid) ? encodeURIComponent(encodeURIComponent(m.uuid)) : encodeURIComponent(m.uuid)) : '';
+  const forms = { uuid: uuidForm, id: m.id ? String(m.id) : '' };
+  const preferred = props.getProperty('MYNOTES_ID_FORM');
+  const order = preferred ? [preferred, preferred === 'uuid' ? 'id' : 'uuid'] : ['uuid', 'id'];
+  for (const f of order) {
+    if (!forms[f]) continue;
+    const r = zoomUserGet_(token, '/my_notes/notes?meeting_id=' + forms[f]);
+    if (verbose) {
+      Logger.log('会議 ' + Utilities.formatDate(new Date(m.start_time || 0), TZ, 'MM/dd HH:mm') + ' / ' + f + ' で: ' + r.code + ' '
+        + (r.code === 200 ? describe_(r.json) : (r.json && r.json.message)));
+    }
+    if (r.code === 200) {
+      if (preferred !== f) props.setProperty('MYNOTES_ID_FORM', f);
+      return { notes: r.json.notes || [] };
+    }
+  }
+  return { notes: [] };
 }
 
 // ---- 保存 ----
