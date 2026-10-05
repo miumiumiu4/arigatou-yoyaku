@@ -48,6 +48,10 @@ def tts_line(line):
     if "_audio" in line:   # gemini_batch() で場面ごとにまとめて作ったもの
         return line["_audio"]
     text = line["text"]
+    if os.environ.get("TTS_PROVIDER") == "dry":   # 声なしの試し：文字数から長さを見積もった無音（絵の重なりの確認用。お金がかからない）
+        return np.zeros(int(SR * max(0.6, len(text) / 5.6)), np.float32)
+    if use_eleven():
+        return eleven_tts(text, line["spk"])
     if os.environ.get("GEMINI_API_KEY"):
         return gemini_tts(text, line["direction"], line["spk"])
     import pyopenjtalk
@@ -85,6 +89,69 @@ def gemini_model():
         _gemini_model = names[0]
         print("Gemini のモデル:", _gemini_model, "（候補:", ", ".join(names), "）")
     return _gemini_model
+
+
+# ElevenLabs の声（2026-10-04 三浦さん：全部 ElevenLabs の声に切りかえる）
+#   TTS_PROVIDER=elevenlabs と ELEVENLABS_API_KEY（Mac の ~/.zshrc。zsh -ic で読む。キーはどこにも書かない）
+#   ELEVEN_VOICE_N … 三浦（語り手）。既定は「サトシ先生（インスタント）」
+#   ELEVEN_VOICE_L … 聞き手の女性。既定は共有ボイス Claire
+#   ELEVEN_MODEL   … 既定 eleven_v3（ほかのモデルは三浦さんの声だと日本語の発音が崩れた）
+ELEVEN_VOICE_DEFAULT = {"N": "iQo1ZxpsQlqOMuMIYCgb", "L": "HxuFAkkGVeQs1sDIMF5g"}
+ELEVEN_CACHE = os.path.join(HERE, ".tts_cache_eleven")
+ELEVEN_CHARS = [0]
+ELEVEN_TEMPO = float(os.environ.get("ELEVEN_TEMPO", "0.92"))   # 話す速さ（1＝そのまま）。2026-10-04 三浦さん：少しゆっくりに
+
+
+def use_eleven():
+    return os.environ.get("TTS_PROVIDER") == "elevenlabs"
+
+
+def eleven_tts(text, spk):
+    import hashlib
+    import time
+    import urllib.error
+    import urllib.request
+    for wrong, right in READING_FIX.items():
+        text = text.replace(wrong, right)
+    model = os.environ.get("ELEVEN_MODEL", "eleven_v3")
+    voice = os.environ.get("ELEVEN_VOICE_" + spk) or ELEVEN_VOICE_DEFAULT[spk]
+    key = hashlib.sha256(f"{model}|{voice}|{text}".encode()).hexdigest()[:24]
+    os.makedirs(ELEVEN_CACHE, exist_ok=True)
+    cache = os.path.join(ELEVEN_CACHE, key + ".mp3")
+    if not os.path.exists(cache):
+        api_key = os.environ["ELEVENLABS_API_KEY"]
+        body = {"text": text, "model_id": model,
+                "voice_settings": {"stability": 0.5, "similarity_boost": 0.85, "style": 0.0, "use_speaker_boost": True}}
+        req = urllib.request.Request(
+            f"https://api.elevenlabs.io/v1/text-to-speech/{voice}?output_format=mp3_44100_128",
+            data=json.dumps(body).encode(), method="POST",
+            headers={"Content-Type": "application/json", "xi-api-key": api_key})
+        for attempt in range(5):
+            try:
+                with urllib.request.urlopen(req, timeout=120) as r:
+                    data = r.read()
+                with open(cache, "wb") as f:
+                    f.write(data)
+                ELEVEN_CHARS[0] += len(text)
+                break
+            except urllib.error.HTTPError as e:
+                detail = e.read().decode("utf-8", "replace").replace(api_key, "")[:300]
+                if e.code in (400, 401, 402, 403, 404, 422):   # キー・支払い・声・入力の問題は、やりなおしても直らない
+                    raise SystemExit(f"ElevenLabs: HTTP {e.code} {detail}")
+                time.sleep(4 * (attempt + 1))
+            except Exception:
+                time.sleep(4 * (attempt + 1))
+        else:
+            raise SystemExit("ElevenLabs の読み上げに失敗しました")
+    raw = subprocess.run([FFMPEG, "-loglevel", "error", "-i", cache] + (["-af", f"atempo={ELEVEN_TEMPO}"] if ELEVEN_TEMPO != 1 else []) +
+                         ["-f", "s16le", "-ac", "1", "-ar", str(SR), "-"],
+                         capture_output=True, check=True).stdout
+    x = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+    # 頭と終わりの無音を少し削る（間は台本どおりに board が入れる）
+    idx = np.where(np.abs(x) > 0.01)[0]
+    if len(idx):
+        x = x[max(0, idx[0] - int(0.05 * SR)): idx[-1] + int(0.12 * SR)]
+    return x
 
 
 def gemini_tts(text, direction, spk):
@@ -237,7 +304,7 @@ def load_bgm(path, seconds, level):
 
 
 def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.06, opening=None, intro=0.0, ending=None, outro=0.0):
-    if os.environ.get("GEMINI_API_KEY"):
+    if os.environ.get("GEMINI_API_KEY") and not use_eleven() and os.environ.get("TTS_PROVIDER") != "dry":
         gemini_batch(lines)
     chunks, t = [np.zeros(int(LEAD_IN * SR), np.float32)], LEAD_IN
     for i, line in enumerate(lines):
@@ -381,6 +448,8 @@ def main():
     html = os.path.join(HERE, "_render.html")   # フォント（node_modules）を読むため、このフォルダに置く
     write_html(tl, html, a.scenes)
     print(f"長さ {duration:.1f}秒、{len(lines)}行、場面 {list(tl['scenes'])}")
+    if use_eleven():
+        print(f"ElevenLabs で新しく読んだ文字数：{ELEVEN_CHARS[0]}字（作り置きの分は数えない）")
     if a.preview:
         preview(html, [float(x) for x in a.preview.split(",")], outdir)
     else:
