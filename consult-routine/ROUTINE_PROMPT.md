@@ -47,12 +47,16 @@
    ・秋元さん・松本さん：その会議で「どこまで進んだか・宿題・つまずき」を読み取り、次の回の進行台本を作る。
      教材は「かみの塾」の PDF（read_file_content で読む）：第1回 1jOO0DG7UXu0pJ7LHfC3ecX6Lf5Qq3rot、第3回 1w4f_-3o4pQZryHGiDXYZSqxgj0zYgFWD、
      第4回 19E2GVxWJizMqK7u7UCkRCE1trisTE-rF、第6回 1BcT6ALYHxeuxNGG7ddaNNegKViCGnart、第7回 1ESkZOOqyi2ObdBYIr-5NAfV0jLRoioDf
-     第2回・第5回：ドライブで「かみの塾_第2回」「かみの塾_第5回」で始まるPDFを探して使う（三浦さんが手で入れる。無ければ飛ばす）。
+     第2回（自分軸の明確化：ミッション・ビジョン・バリュー、未来タイムライン、6ヶ月の戦略、1年で必ず達成する5つのこと）1WqJn2l9Gs-8EMgg25UvqQw3N8hhOyzsxle9GeYxGGrM、
+     第5回（コピーライティング）1lJjDr2u9xFYcPsRI-CN4hZOGBZItrlzNhbgKO9mZE_k（どちらもPDFの文字を起こした Google ドキュメント）。
      「Vライバー」「福袋」など、ほかの講座の「第◯回講義」の資料は関係ないので使わない。
      ワークシート類：かみの塾の共有資料一覧 1VSJhwbeXl8qvIEyMDCy4Jbn0VzItBikhIA7aiWOHFms の「共有資料」シートの「●講座資料」の欄のリンク先
      （ミッション・ビジョン・バリューの言語化、6ヶ月の戦略プランニング、パーフェクトカスタマーを絞り込む、ヒアリングシート、同業者リサーチ、
      セールス・トークシナリオなど）を、台本の宿題やワークに使う。読めないものは飛ばして報告に書く。
-     これらの資料は受講生個人用。中身をクライアントに渡すファイルに丸写ししない（台本は三浦さん用。要点と問いかけだけ使う）
+     これらの資料は受講生個人用。資料のページをそのまま写さず、三浦さんの言葉で書き直して使う（台本は三浦さん用。クライアントに渡さない）。
+     【説明の順番のルール（必ず守る）】台本・振り返り・動画の原稿で何かを説明するときは、要点だけで終わらせず詳しく解説し、
+     いつも「① なぜ（なぜ大事か・やらないとどうなるか）→ ② 何（それは何か・定義と具体例）→ ③ どうやって（手順・問いかけの言葉・例文）
+     → ④ 今すぐアクション（今日・この場でやる1つ）」の順番で書く。順番を入れ替えない。どれかが欠けたら書き足す
      形の見本（このとおりの書き方・粒度にそろえる）：
      秋元さん 1qQ2u-xULa6UJ-HCeaFJVXIsVttVewnoHiM5wvrN8ATk（10/22の台本）、1ZtWcHhrZBijzjPEoyS1LyB5cNyHHhtJ6v2U7Mzl-ODw（前回）
      松本さん 1vuxuQ_WzFWX6FY1hIwPVElAvwGAWHgcApgkrAxR55Ko
