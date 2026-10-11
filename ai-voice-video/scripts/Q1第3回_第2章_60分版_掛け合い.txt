@@ -1,0 +1,237 @@
+# Q1第3回「お金と時期の不安の正体」第2章「防衛反応の扱い方」（60分版）を二人の掛け合いにしたもの
+# 形式：話者 | 演技の指示（短い英語。ElevenLabs では使っていない） | セリフ
+# 話者：N＝語り手（三浦）、L＝聞き手（受講生。相づちと短い質問だけ）
+# 三浦のセリフは ever-offer/lesson3-script-60min.md の第2章の読み上げ原稿のまま。面談で出た言葉は一字も変えない
+# 呼吸の実演：原稿の編集メモ「数を数える部分は、1つずつ1秒の間をあける」に合わせ、数は1つずつ別の行にして「# wait」で間を足す
+
+# scene: title
+N | warm, calm | 第2章です。
+N | calm | ここでは、防衛反応が出てきたときの、扱い方をお伝えします。
+N | calm | 先にお伝えしておくと、今日は、防衛反応を退治するのではありません。
+N | clear, warm | 取扱説明書を作ります。
+L | surprised | 退治、しないんですか？
+N | calm | 退治しようとすると、かえって大きくなります。
+N | warm | でも、取扱説明書があれば、いつ出てきても、落ち着いて対応できます。
+N | clear | 手順は、全部で7つあります。ひとつずつ、見ていきましょう。
+N | warm | 大事なところなので、メモを取りながら見てください。
+L | bright | メモ、用意します。
+
+# scene: notice
+N | clear | 手順の1つめ。体で気づく。
+N | calm | 胸がぎゅっとなる。お腹がざわっとする。頭が、かっとなる。
+N | gentle | まずは、気づくだけでいいです。
+N | gentle | 慣れないうちは、あとから「あ、さっき出ていたな」と気づくことも多いです。それでも、十分です。
+L | relieved | あとからでも、いいんですね。
+N | clear | 2つめ。認める。
+N | gentle | 「あ、出てきたな」。「今、頭にきてるな」。自分に、そう言ってあげてください。
+N | serious | ここで大事なのは、抑え込まないことです。
+N | calm | 「こんなことで不安になってはいけない」と抑え込もうとすると、かえって大きくなります。
+N | serious | それに、認めずにいると、自分で自分の主導権を、持てなくなってしまいます。
+N | serious | 気づかないうちに、防衛反応にハンドルを握られてしまうんです。
+N | warm, firm | 認めることで、ハンドルが、自分に戻ってきます。
+
+# scene: nestle
+N | clear | 3つめ。寄り添う。
+N | gentle | おへその下あたり、お腹の底を、意識してください。
+N | gentle | そこから、胸にいる感情に向けて、「今そう感じたんだね」と、言ってあげてください。
+N | calm | 怒りのときは、お腹の底から、頭に向けて言います。
+N | warm | 「そりゃ怖いよな。ずっと守ってくれたもんな」。そうやって寄り添うと、声は、少しずつ落ち着いていきます。
+N | clear | ポイントは、お腹の底から、ということです。
+L | curious | 頭で唱えるのとは、違うんですか？
+N | calm | 頭だけで「今そう感じたんだね」と唱えても、感情は、何度も何度も、ぶり返してきます。
+N | firm | お腹の底から、感情に向けて意識を向けてあげると、まるっきり、違います。
+N | warm | この「今そう感じたんだね」は、私は、最高の魔法の言葉だと思っています。
+N | warm | ボールを、自分に戻してあげる言葉です。
+
+# scene: write
+N | clear | 4つめ。書き出します。紙でも、スマホでも、かまいません。
+N | calm | まず、出てきた言葉を、全部出します。
+N | calm | 「ムカつく」とか、「怖い」とか、きれいな言葉でなくていいんです。
+N | gentle | いったん、全部、言葉にしてあげることが大事です。
+N | clear | 次に、感情は、1から10の数字にします。「今の不安は、7くらい」というように。
+N | calm | 10がいちばん強くて、0が落ち着いている状態です。
+N | clear | 問題は、言葉にします。「お金が足りないかもしれない」。「失敗したら、家族に申し訳ない」。
+N | firm | 感情は数字で、問題は言葉で。この2つを、しっかり切り分けるんです。
+L | thoughtful | 数字と、言葉で…。
+N | calm | 問題が分からないから、不安な感情が出てきます。
+N | clear | でも、問題が言葉になった瞬間に、その解決策も、もうそこに見えてきます。
+N | warm | 誰かに聞けば解決する、ということも、たくさんあります。
+N | clear | そして最後に、反対側の言葉に言い換えます。
+N | warm, bright | 「できるのかな？」を、「挑戦する自分は、もう一歩目を踏み出している」に。
+
+# scene: reframe
+N | calm | 言い換えの例を、もう少し紹介します。
+N | clear | 「〇〇だから、無理だろう」と思ったら、「一人でやろうとしているだけ。場所と人を変えれば、ちゃんとできる」。
+N | storytelling | 車を運転していて、急に割り込まれて、「なんだ、あいつ」と頭にきたとき。
+N | warm | 「危険に気付かせてくれたんだ。ありがたい」。
+L | wry | ちょっと、無理やりな気も…。
+N | gentle, smiling | ちょっと無理やりに聞こえるかもしれません。
+N | firm | でも、書いた瞬間に、頭のカーナビの目的地が、うまくいく方向に、変わるんです。
+N | serious | 逆に、出てきた言葉を、そのまま放っておくと、心の中で、どんどん腐っていきます。
+N | serious | そして、その腐った言葉のほうに、現実が寄っていってしまいます。
+N | firm | 言葉にしたものは、存在するものと同じです。
+N | warm, firm | だから、どんな言葉を書くかが、とても大事なんです。
+
+# scene: role
+N | clear | 5つめ。名前を付けます。
+N | gentle | その感情を感じている自分は、どんな自分でしょうか。
+N | calm | 「余裕のない自分」。「情けない自分」。「子どもな自分」。
+N | warm | 名前は、自分の口から出てきた言葉が、いちばんです。
+N | clear, firm | 6つめ。ここが、大事です。直そうとするのではなく、出番を決めます。
+N | calm | たとえば、「余裕のない自分」は、実は、とても優秀です。
+N | warm | お金の心配をして、細かく数字を見てくれる。点検係としては、超一流なんです。
+L | surprised | 点検係、ですか。
+N | clear | だから、見積もりや、資金繰り、支払いの最後のチェック、月末の数字の確認では、出番100%。思いきり働いてもらいます。
+N | clear | でも、商談や、値決めの瞬間、新しい挑戦の一歩目、採用の面接。
+N | firm | 稼ぐ場面では、出番0%です。代わりに、「チャレンジャーな自分」に出てもらいます。
+
+# scene: callout
+N | clear | 7つめ。声をかけます。
+N | warm, gentle | 「今日は出番なし。点検の日に、また頼むね」。
+N | calm | そう言って、持ち場に戻ってもらうんです。
+N | warm | クビにしなくていい。配置換えをするだけです。
+N | warm, smiling | そう思うと、力が抜けて、続けられそうじゃないですか。
+L | bright | 配置換えなら、できそうです。
+
+# scene: breath
+N | gentle, inviting | ここで一度、一緒にやってみましょう。
+L | bright | やってみます。
+N | calm | 防衛反応が強く出たときに、体を落ち着かせる方法です。
+N | calm | 感情が頂点に達したときに、自分を保つための呼吸です。
+N | calm, slow, soft | 楽な姿勢になって、目を閉じてください。
+# wait: 4
+
+# scene: practice
+N | calm, slow, guiding | 鼻から、4秒吸います。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+N | calm, slow, guiding | 口から、4秒吐きます。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+N | calm, slow | もう一度。
+N | calm, slow, guiding | 鼻から、4秒吸います。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+N | calm, slow, guiding | 口から、4秒吐きます。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+N | calm, slow | 最後に、もう一度。
+N | calm, slow, guiding | 鼻から、4秒吸います。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+N | calm, slow, guiding | 口から、4秒吐きます。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+N | calm, slow, guiding | 4秒止めます。
+N | calm, counting slowly | 1、
+# wait: 0.45
+N | calm, counting slowly | 2、
+# wait: 0.45
+N | calm, counting slowly | 3、
+# wait: 0.45
+N | calm, counting slowly | 4。
+# wait: 0.45
+
+# scene: after
+N | calm, slow, soft | はい、ゆっくり、目を開けてください。
+N | gentle | 少し、体がゆるんだでしょうか。
+L | relieved, soft | 少し、楽になりました。
+N | clear | 不安が強いときは、考える前に、まず呼吸です。
+N | calm | 商談の前。大事な電話の前。
+N | warm | 家族と大事な話をする前にも、使ってみてください。
+
+# scene: summary
+N | clear | 第2章のまとめです。
+N | clear | 防衛反応の取扱説明書は、7つの手順でした。
+N | clear | 体で気づく。認める。
+N | warm | お腹の底から、「今そう感じたんだね」と寄り添う。
+N | clear | 書き出す。感情は数字、問題は言葉。そして反対側の言葉へ。
+N | clear | 名前を付ける。出番を決める。声をかける。
+N | firm | そして、強く出たときは、まず呼吸。
+N | calm | これは、一度でできるようになるものではありません。
+N | calm | 自然にできるようになるまで、何年もかかることもあります。
+N | warm | でも、今日、知ったことで、次に防衛反応が出たとき、「あ、これだ」と気づけるようになります。
+N | warm, firm | それが、始まりです。
+N | calm | 次の第3章では、お金の不安そのものを、くわしく見ていきます。
+L | bright | 第3章も、見ていきます！
