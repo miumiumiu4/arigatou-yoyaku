@@ -47,7 +47,8 @@
    ・秋元さん・松本さん：その会議で「どこまで進んだか・宿題・つまずき」を読み取り、次の回の進行台本を作る。
      教材は「かみの塾」の PDF（read_file_content で読む）：第1回 1jOO0DG7UXu0pJ7LHfC3ecX6Lf5Qq3rot、第3回 1w4f_-3o4pQZryHGiDXYZSqxgj0zYgFWD、
      第4回 19E2GVxWJizMqK7u7UCkRCE1trisTE-rF、第6回 1BcT6ALYHxeuxNGG7ddaNNegKViCGnart、第7回 1ESkZOOqyi2ObdBYIr-5NAfV0jLRoioDf
-     （第2回・第5回はまだ見つかっていない。ドライブで「かみの塾」を検索して見つかれば使う）
+     （第2回・第5回はまだ共有されていない。持ち主 nomikalucky@gmail.com の「第２回講義：」「第５回講義：」で始まるPDFが見つかったときだけ使う。
+     「Vライバー」「福袋」など、ほかの講座の「第◯回講義」の資料は関係ないので使わない）
      形の見本（このとおりの書き方・粒度にそろえる）：
      秋元さん 1qQ2u-xULa6UJ-HCeaFJVXIsVttVewnoHiM5wvrN8ATk（10/22の台本）、1ZtWcHhrZBijzjPEoyS1LyB5cNyHHhtJ6v2U7Mzl-ODw（前回）
      松本さん 1vuxuQ_WzFWX6FY1hIwPVElAvwGAWHgcApgkrAxR55Ko
