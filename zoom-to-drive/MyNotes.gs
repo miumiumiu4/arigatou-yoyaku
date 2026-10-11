@@ -63,6 +63,13 @@ function probeMyNotesUser() {
   Logger.log('1件目の中身: ' + c.code + ' ' + (c.code === 200 ? shapeOf_(c.json) : JSON.stringify(c.json)));
 }
 
+/** やり直し用：過去分の保存済みの印を消して、もう一度過去分（最大180日）から保存する */
+function redoMyNotesBackfill() {
+  PropertiesService.getScriptProperties().deleteProperty('MYNOTES_BACKFILL_DONE');
+  Logger.log('過去分の保存済みの印を消しました。今から過去分を保存し直します');
+  runMyNotes();
+}
+
 /** 手順4：1時間おきの自動保存を始める */
 function setupMyNotes() {
   ScriptApp.getProjectTriggers()
@@ -76,15 +83,19 @@ function setupMyNotes() {
 /** 本体：まだ保存していないノートをドライブに保存する
  *  My Notes の一覧は「会議ごと」にしか取れない（meeting_id が必須）ため、
  *  会社の鍵で過去の会議の一覧を取り、会議ごとにノートを探す。
- *  初回は過去365日分、それ以降は直近14日分を見る。 */
+ *  初回は過去180日分（Zoom のレポートで取れる上限）、それ以降は直近14日分を見る。 */
 function runMyNotes() {
   const props = PropertiesService.getScriptProperties();
   const folder = DriveApp.getFolderById(mustGet_(props, 'FOLDER_ID'));
   const token = myNotesToken_();
   const started = Date.now();
   const backfilled = props.getProperty('MYNOTES_BACKFILL_DONE') === '1';
-  const got = listPastMeetings_(backfilled ? 14 : 365);
-  Logger.log('会議 ' + got.meetings.length + '件を確認（取得元: ' + got.source + '）');
+  const got = listPastMeetings_(backfilled ? 14 : 180);
+  Logger.log('会議 ' + got.meetings.length + '件を確認（取得元: ' + got.source + (got.note ? ' / ' + got.note : '') + '）');
+  if (!got.meetings.length) {
+    Logger.log('会議が1件も取れませんでした。過去分の保存済みの印は付けずに、次の回にもう一度試します');
+    return;
+  }
 
   for (const m of got.meetings) {
     if (Date.now() - started > 5 * 60 * 1000) {
@@ -121,9 +132,10 @@ function listPastMeetings_(days) {
   const now = new Date();
   const notes = [];
 
-  // ① レポート（1回に30日までなので区切って聞く）
+  // ① レポート（1回に30日までなので区切って聞く。古い区切りで断られたら、それまでに取れた分を使う）
   const report = [];
   let reportOk = true;
+  let chunks = 0;
   for (let end = now; end > new Date(now.getTime() - days * 864e5) && reportOk; end = new Date(end.getTime() - 30 * 864e5)) {
     const from = new Date(Math.max(end.getTime() - 30 * 864e5, now.getTime() - days * 864e5));
     let next = '';
@@ -131,12 +143,13 @@ function listPastMeetings_(days) {
       const r = zoomUserGet_(s2s, '/report/users/' + user + '/meetings?type=past&page_size=300'
         + '&from=' + Utilities.formatDate(from, TZ, 'yyyy-MM-dd') + '&to=' + Utilities.formatDate(end, TZ, 'yyyy-MM-dd')
         + (next ? '&next_page_token=' + encodeURIComponent(next) : ''));
-      if (r.code !== 200) { reportOk = false; notes.push('レポート ' + r.code + ' ' + (r.json && r.json.message)); break; }
+      if (r.code !== 200) { reportOk = false; notes.push('レポート ' + Utilities.formatDate(from, TZ, 'MM/dd') + '〜 で ' + r.code + ' ' + (r.json && r.json.message)); break; }
       (r.json.meetings || []).forEach(m => report.push(m));
       next = r.json.next_page_token || '';
     } while (next);
+    if (reportOk) chunks++;
   }
-  if (reportOk) return { meetings: uniqueMeetings_(report), source: 'レポート', note: '' };
+  if (reportOk || chunks > 0) return { meetings: uniqueMeetings_(report), source: 'レポート', note: notes.join(' / ') };
 
   // ② 過去の会議一覧
   const prev = [];
