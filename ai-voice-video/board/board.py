@@ -37,6 +37,8 @@ def parse(path):
             scene = raw.split(":", 1)[1].strip()
         elif raw.startswith("# wait:") and lines:
             lines[-1]["wait"] = lines[-1].get("wait", 0) + float(raw.split(":", 1)[1])
+        elif raw.startswith("# insert:") and lines:   # この行のあとに、実際の方の声（--inserts の <ID>.wav と <ID>.mp4）を差し込む
+            lines[-1]["insert"] = raw.split(":", 1)[1].strip()
         elif raw and not raw.startswith("#"):
             spk, direction, text = [x.strip() for x in raw.split("|", 2)]
             lines.append({"spk": spk, "direction": direction, "text": text, "scene": scene})
@@ -52,7 +54,7 @@ def tts_line(line):
         return np.zeros(int(SR * max(0.6, len(text) / 5.6)), np.float32)
     if use_eleven():
         return eleven_tts(text, line["spk"])
-    if os.environ.get("GEMINI_API_KEY"):
+    if os.environ.get("TTS_PROVIDER") == "gemini" and os.environ.get("GEMINI_API_KEY"):   # 2026-10-12 三浦さん：Gemini の API 課金はしない。はっきり指定したときだけ
         return gemini_tts(text, line["direction"], line["spk"])
     import pyopenjtalk
     for wrong, right in READING_FIX.items():
@@ -303,10 +305,25 @@ def load_bgm(path, seconds, level):
     return x
 
 
-def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.06, opening=None, intro=0.0, ending=None, outro=0.0):
-    if os.environ.get("GEMINI_API_KEY") and not use_eleven() and os.environ.get("TTS_PROVIDER") != "dry":
+INSERT_PAD = 0.25   # 差し込みの前後の間
+
+
+def load_insert(ins_dir, ins_id):
+    """差し込みの声（48kHz mono の wav）。なければ None（その差し込みは飛ばす）"""
+    p = os.path.join(ins_dir or "", ins_id + ".wav")
+    if not ins_dir or not os.path.exists(p) or not os.path.exists(p[:-4] + ".mp4"):
+        print(f"  差し込み {ins_id} のファイルがないので飛ばします（{p}）")
+        return None
+    with wave.open(p) as w:
+        assert w.getframerate() == SR and w.getnchannels() == 1, f"{p} は 48kHz mono にしてください"
+        return np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32) / 32767
+
+
+def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.06, opening=None, intro=0.0, ending=None, outro=0.0, ins_dir=None):
+    if os.environ.get("TTS_PROVIDER") == "gemini" and os.environ.get("GEMINI_API_KEY"):
         gemini_batch(lines)
     chunks, t = [np.zeros(int(LEAD_IN * SR), np.float32)], LEAD_IN
+    inserts = []
     for i, line in enumerate(lines):
         x = tts_line(line)
         x = 0.9 * x / max(1e-6, np.max(np.abs(x)))
@@ -317,12 +334,27 @@ def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.06, opening=None, in
             nxt = lines[i + 1]
             gap = SCENE_GAP if nxt["scene"] != line["scene"] else SAME_GAP if nxt["spk"] == line["spk"] else SWAP_GAP
             gap += line.get("wait", 0)
+            ins = load_insert(ins_dir, line["insert"]) if line.get("insert") else None
+            if ins is not None:   # 差し込みの長さだけ、間をあける（声はあとで重ねる）
+                inserts.append({"id": line["insert"], "at": round(t + INSERT_PAD, 3), "dur": round(len(ins) / SR, 3), "_x": ins})
+                gap += len(ins) / SR + INSERT_PAD * 2
             chunks.append(np.zeros(int(gap * SR), np.float32))
             t += gap
     chunks.append(np.zeros(int(TAIL * SR), np.float32))
     voice = np.concatenate(chunks)
+    if inserts:   # 差し込みの声を、講座の声と同じ大きさ（話している所の RMS）にそろえて重ねる
+        spoken = [c[np.abs(c) > 0.02] for c in chunks]
+        spoken = np.concatenate(spoken) if sum(map(len, spoken)) else np.full(1, 0.15, np.float32)   # 声なしの試しのときは仮の大きさ
+        ref = np.sqrt(np.mean(spoken ** 2))
+        for ins in inserts:
+            x = ins.pop("_x")
+            r = np.sqrt(np.mean(x[np.abs(x) > 0.02 * np.max(np.abs(x))] ** 2))
+            x = x * min(ref / max(r, 1e-6), 0.98 / max(1e-6, np.max(np.abs(x))))
+            k = int(ins["at"] * SR)
+            voice[k:k + len(x)] += x[:len(voice) - k]
     if bgm_path:
-        mix = voice + load_bgm(bgm_path, len(voice) / SR, bgm_level)
+        b = load_bgm(bgm_path, len(voice) / SR + 0.01, bgm_level)[:len(voice)]   # 長さの丸めで1サンプルずれることがあるので、声の長さにそろえる
+        mix = voice + np.pad(b, (0, len(voice) - len(b)))
     else:
         mix = voice + make_bgm(len(voice) / SR + 1)[:len(voice)] * 0.06
     f = int(1.5 * SR)
@@ -336,6 +368,8 @@ def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.06, opening=None, in
         for line in lines:
             line["start"] = round(line["start"] + intro, 3)
             line["end"] = round(line["end"] + intro, 3)
+        for ins in inserts:
+            ins["at"] = round(ins["at"] + intro, 3)
     if ending and outro > 0:
         ed = load_bgm(ending, outro, 0.42)
         mix = np.concatenate([mix, ed])
@@ -344,6 +378,7 @@ def build_audio(lines, wav_path, bgm_path=None, bgm_level=0.06, opening=None, in
         w.setsampwidth(2)
         w.setframerate(SR)
         w.writeframes((np.clip(mix, -1, 1) * 32767).astype(np.int16).tobytes())
+    build_audio.inserts = inserts
     return len(mix) / SR
 
 
@@ -354,6 +389,7 @@ def timeline(lines, duration, meta=None):
         s["lines"].append(i)
     tl = {"duration": round(duration, 3), "scenes": scenes,
           "lines": [{k: l[k] for k in ("spk", "direction", "text", "start", "end", "scene")} for l in lines]}
+    tl["inserts"] = getattr(build_audio, "inserts", [])
     tl.update(meta or {})
     return tl
 
@@ -415,6 +451,22 @@ def render(html_path, wav_path, duration, fps, mp4_path, span=None):
     enc.wait()
 
 
+def overlay_inserts(mp4, inserts, ins_dir):
+    """書き出した動画の上に、差し込みの映像（ID.mp4。1920×1080・30fps）を、あけておいた時間に重ねる。声はもう音声に入っている"""
+    tmp = mp4[:-4] + "_ins.mp4"
+    cmd, fl, last = [FFMPEG, "-y", "-loglevel", "error", "-i", mp4], [], "0:v"
+    for k, ins in enumerate(inserts, 1):
+        cmd += ["-i", os.path.join(ins_dir, ins["id"] + ".mp4")]
+        fl.append(f"[{k}:v]setpts=PTS-STARTPTS+{ins['at']}/TB[c{k}]")
+        fl.append(f"[{last}][c{k}]overlay=eof_action=pass:enable='between(t,{ins['at']},{ins['at'] + ins['dur']})'[v{k}]")
+        last = f"v{k}"
+    cmd += ["-filter_complex", ";".join(fl), "-map", f"[{last}]", "-map", "0:a", "-c:v", "libx264", "-preset", "medium",
+            "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "copy", tmp]
+    subprocess.run(cmd, check=True)
+    os.replace(tmp, mp4)
+    print(f"差し込み {len(inserts)}か所を重ねました：" + "、".join(f"{i['id']}（{i['at']:.1f}秒から{i['dur']:.1f}秒）" for i in inserts))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("script")
@@ -433,6 +485,7 @@ def main():
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--span", help="一部分だけ書き出す 開始秒,終了秒（見本用）")
     ap.add_argument("--preview", help="確認用に静止画だけ書き出す秒数（カンマ区切り）")
+    ap.add_argument("--inserts", help="差し込み（台本の「# insert: ID」）の置き場。ID.wav（声）と ID.mp4（映像）を置く")
     a = ap.parse_args()
     outdir = os.path.abspath(a.name + "_work")
     os.makedirs(outdir, exist_ok=True)
@@ -440,7 +493,7 @@ def main():
     wav = os.path.join(outdir, "audio.wav")
     intro = a.intro if a.opening else 0.0
     outro = a.outro if a.ending else 0.0
-    duration = build_audio(lines, wav, a.bgm, a.bgm_level, a.opening, intro, a.ending, outro)
+    duration = build_audio(lines, wav, a.bgm, a.bgm_level, a.opening, intro, a.ending, outro, a.inserts)
     meta = {"intro": intro, "outro": round(duration - outro, 3) if outro else 0,
             "series": a.series, "number": a.number, "title": a.title, "next": a.next}
     tl = timeline(lines, duration, meta)
@@ -455,6 +508,8 @@ def main():
     else:
         span = [float(x) for x in a.span.split(",")] if a.span else None
         render(html, wav, duration, a.fps, os.path.abspath(a.name + ".mp4"), span)
+        if tl["inserts"] and not span:
+            overlay_inserts(os.path.abspath(a.name + ".mp4"), tl["inserts"], a.inserts)
 
 
 if __name__ == "__main__":
