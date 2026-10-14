@@ -136,7 +136,9 @@ function parseVtt_(vtt, start) {
 function findCalendarEvent_(start) {
   const events = CalendarApp.getDefaultCalendar()
     .getEvents(new Date(start.getTime() - 30 * 60000), new Date(start.getTime() + 30 * 60000))
-    .filter(e => !e.isAllDayEvent());
+    .filter(e => !e.isAllDayEvent())
+    // Claude Code の作業メモ（【コード】【Claude Code】で始まる予定）は会議ではないので名前に使わない
+    .filter(e => !/^【(コード|Claude Code)】/.test(e.getTitle()));
   if (!events.length) return null;
   events.sort((a, b) => Math.abs(a.getStartTime() - start) - Math.abs(b.getStartTime() - start));
   return events[0];
