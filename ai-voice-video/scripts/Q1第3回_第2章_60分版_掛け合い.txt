@@ -103,114 +103,114 @@ N | calm, slow, soft | 楽な姿勢になって、目を閉じてください。
 
 # scene: practice
 N | calm, slow, guiding | 鼻から、4秒吸います。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 N | calm, slow, guiding | 4秒止めます。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 N | calm, slow, guiding | 口から、4秒吐きます。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 N | calm, slow, guiding | 4秒止めます。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 N | calm, slow | もう一度。
 N | calm, slow, guiding | 鼻から、4秒吸います。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 N | calm, slow, guiding | 4秒止めます。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 N | calm, slow, guiding | 口から、4秒吐きます。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 N | calm, slow, guiding | 4秒止めます。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 N | calm, slow | 最後に、もう一度。
 N | calm, slow, guiding | 鼻から、4秒吸います。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 N | calm, slow, guiding | 4秒止めます。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 N | calm, slow, guiding | 口から、4秒吐きます。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 N | calm, slow, guiding | 4秒止めます。
-N | calm, counting slowly | 1、
+N | calm, counting slowly | いーち、
 # wait: 0.45
-N | calm, counting slowly | 2、
+N | calm, counting slowly | にーい、
 # wait: 0.45
-N | calm, counting slowly | 3、
+N | calm, counting slowly | さーん、
 # wait: 0.45
-N | calm, counting slowly | 4。
+N | calm, counting slowly | よーん。
 # wait: 0.45
 
 # scene: after
