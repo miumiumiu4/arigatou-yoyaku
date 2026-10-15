@@ -87,6 +87,18 @@ CLIPS = {
                    (1029.1, "「あ、そうか、100%信頼できてなかったんだなぁ」と思って、"),
                    (1034.2, "100%信頼すると決めて、まずは任してみて、"),
                    (1038.2, "任してみて何か起きたら、そこはもう自分が責任を取ればいいやと思って。")]),
+    # 三浦さんの撮りおろし（2026-10-15 Zoom で収録。左下の名札は切る）。講師本人なので「ご本人の体験です」の打消しは出さない
+    "R1": dict(file="R1_miura_zoom.mp4", name="三浦さとし", role=["この講座の講師", "ありがとうグループ代表"],
+               label="講師より", disc="",
+               crop=(0, 0, 1280, 690), parts=[[3.7, 43.4]], subs=[
+                   (3.7, "少しだけ、私自身の話をさせてください。"),
+                   (7.6, "私は2017年に、心筋梗塞を経験しました。"),
+                   (14.4, "病院のベッドの上で、真っ先に浮かんだのは、家族の顔でした。"),
+                   (20.1, "この先、自分が動けなくなったら、家族はどうなるんだろう。"),
+                   (25.4, "そう思った時、一人で全部を背負うやり方には、限りがあると気づきました。"),
+                   (32.3, "そこから、一人で頑張るのをやめて、人に頼ることを覚えました。"),
+                   (38.0, "だから、あなたに伝えたいんです。"),
+                   (41.0, "一人で、抱えなくていい。")]),
 }
 
 # 黒板（board.py の画面と同じ位置）：#bw は translate(173,24) scale(.82)
@@ -121,7 +133,7 @@ function set(mode, text){
     if (!P.face) vo = `<div class="vo" style="top:${vb[1]+150}px;left:${vb[0]}px;width:${vb[2]}px;font-size:96px">${P.name}</div>
       <div class="vo or" style="top:${vb[1]+290}px;left:${vb[0]}px;width:${vb[2]}px;font-size:38px;color:#F4A765">音声のみ</div>`;
     r.innerHTML = `<div class="bg"></div><div id="frame"></div><div id="board"></div><div id="tray"></div>
-      <div class="chalk or" style="left:282px;top:116px;font-size:36px">実際の方の声</div>
+      <div class="chalk or" style="left:282px;top:116px;font-size:36px">${P.label}</div>
       <div class="chalk" style="left:282px;top:186px;font-size:70px">${P.name}</div>
       <div style="position:absolute;left:286px;top:296px;width:380px;display:flex;flex-direction:column;gap:14px">
       ${P.role.map((x,i)=>`<div class="chalk ${x.includes('オーナー')||x.includes('トレーナー')||x.includes('代表')?'or':''}" style="position:static;font-size:${x.length>12?28:32}px;white-space:nowrap">${x}</div>`).join('')}</div>
@@ -155,7 +167,8 @@ def video_box(c):
 def make_pngs(cid, c, work):
     from playwright.sync_api import sync_playwright
     face = c["crop"] is not None
-    p = {"name": c["name"], "role": c["role"], "disc": DISCLAIMER, "face": face, "vbox": video_box(c)}
+    p = {"name": c["name"], "role": c["role"], "disc": c.get("disc", DISCLAIMER), "label": c.get("label", "実際の方の声"),
+         "face": face, "vbox": video_box(c)}
     html = BOARD / f"_insert_{cid}.html"
     html.write_text(HTML.replace("__P__", json.dumps(p, ensure_ascii=False)))
     with sync_playwright() as pw:
@@ -178,7 +191,7 @@ def make(cid):
     c = CLIPS[cid]
     work = OUT / f"_{cid}"
     work.mkdir(parents=True, exist_ok=True)
-    src = SRC / f"yt_{c['src']}.mp4"
+    src = SRC / c["file"] if c.get("file") else SRC / f"yt_{c['src']}.mp4"
     # 1. 部分ごとに切り出す（声は 48kHz mono、前後にフェード。映像は 30fps）
     segs, t_out, mapping = [], 0.0, []
     for k, (a, b) in enumerate(c["parts"]):
