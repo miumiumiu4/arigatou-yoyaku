@@ -32,6 +32,7 @@ function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   ensureSheet_(ss, SHEET_BOOK, BOOK_HEADERS);
   ensureSheet_(ss, SHEET_RECRUIT, RECRUIT_HEADERS);
+  ensureSheet_(ss, SHEET_CONTRACT, CONTRACT_HEADERS);
 
   // 紹介集計シート（数式で自動集計）
   let ref = ss.getSheetByName(SHEET_REF);
@@ -68,6 +69,8 @@ function doPost(e) {
   lock.waitLock(20000);
   try {
     const d = JSON.parse(e.postData.contents);
+    if (d.kind === "contract_create") return json_(Object.assign({ ok: true }, handleContractCreate_(d)));
+    if (d.kind === "contract_sign")   return json_(Object.assign({ ok: true }, handleContractSign_(d)));
     const res = d.kind === "recruit" ? handleRecruit_(d) : handleBooking_(d);
     return json_({ ok: true, id: res.id });
   } catch (err) {
@@ -76,7 +79,14 @@ function doPost(e) {
     lock.releaseLock();
   }
 }
-function doGet() { return json_({ ok: true, message: "arigatou booking endpoint" }); }
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  if (p.action === "contract_get") {
+    try { return json_(Object.assign({ ok: true }, handleContractGet_(p.id, p.t))); }
+    catch (err) { return json_({ ok: false, error: String(err.message || err) }); }
+  }
+  return json_({ ok: true, message: "arigatou booking endpoint" });
+}
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
 function handleBooking_(d) {
