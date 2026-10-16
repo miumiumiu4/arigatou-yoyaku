@@ -71,6 +71,7 @@ function doPost(e) {
     const d = JSON.parse(e.postData.contents);
     if (d.kind === "contract_create") return json_(Object.assign({ ok: true }, handleContractCreate_(d)));
     if (d.kind === "contract_sign")   return json_(Object.assign({ ok: true }, handleContractSign_(d)));
+    if (d.kind === "contract_status") return json_(Object.assign({ ok: true }, handleContractStatus_(d)));
     const res = d.kind === "recruit" ? handleRecruit_(d) : handleBooking_(d);
     return json_({ ok: true, id: res.id });
   } catch (err) {
