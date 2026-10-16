@@ -7,6 +7,7 @@
  * スクリプト プロパティ（プロジェクトの設定）に追加：
  *   CONTRACT_PASSCODE … 契約を作成するときの合言葉（必須。無いと誰でも作成メールを送れてしまうため）
  *   SITE_URL          … 公開URLの先頭（例 https://ユーザー名.github.io/arigatou-yoyaku/）署名リンクの改ざん防止（推奨）
+ * 契約書の文面は ContractTemplates.gs に置き、合言葉を入れた人にだけ返します。
  * 追加後は setup() を再実行し、ウェブアプリを「新バージョン」で再デプロイしてください。
  */
 
@@ -56,10 +57,20 @@ function checkToken_(c, t) {
   if (!t || c.o["署名トークン"] !== t) throw new Error("署名リンクが正しくないか、すでに使用済みです");
 }
 
+function checkPasscode_(d) {
+  const pass = PropertiesService.getScriptProperties().getProperty("CONTRACT_PASSCODE");
+  if (!pass || d.passcode !== pass) { Utilities.sleep(1500); throw new Error("合言葉が違います"); }
+}
+
+/* 甲が合言葉を入れたときに、契約書ひな形を返す（ContractTemplates.gs） */
+function handleContractTemplates_(d) {
+  checkPasscode_(d);
+  return { templates: CONTRACT_TEMPLATES };
+}
+
 /* 甲が契約を作成 */
 function handleContractCreate_(d) {
-  const pass = PropertiesService.getScriptProperties().getProperty("CONTRACT_PASSCODE");
-  if (!pass || d.passcode !== pass) throw new Error("作成用パスコードが違います");
+  checkPasscode_(d);
   if (!d.title || !d.body || !d.aName || !d.bName) throw new Error("必須項目が未入力です");
   if (!isEmail_(d.aEmail) || !isEmail_(d.bEmail)) throw new Error("メールアドレスを確認してください");
   if (String(d.body).length > 20000) throw new Error("本文が長すぎます");

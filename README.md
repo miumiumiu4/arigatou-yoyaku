@@ -10,7 +10,7 @@
 | `index.html` | 読者限定の予約ページ（金額自動計算・紹介コード対応） |
 | `recruit.html` | 業務委託スタッフ募集ページ（YouTube埋め込み＋面接申込フォーム） |
 | `Code.gs` | スプレッドシート側の受付プログラム（予約記録・確認メール・PayPal請求書・紹介集計） |
-| `contract.html` | かんたん電子契約（テンプレ選択→手書きサイン→相手にURL送付→署名済PDFをメール） |
+| `contract.html` | 電子契約（合言葉で入口を開く→テンプレ選択→手書きサイン→相手に送るリンクを発行→署名済PDFをメール） |
 | `Contract.gs` | 電子契約の受付プログラム（`Code.gs` と同じApps Scriptプロジェクトに追加） |
 
 ---
@@ -101,7 +101,7 @@ Claude Codeの「リポジトリを選択」で `arigatou-yoyaku` を選べる�
 
 例え話でいうと、**contract.html＝契約書を書いて判を押す机、Contract.gs＝押印済みの書類を封筒に入れて金庫（Googleドライブ）へしまう係**です。
 
-1. Apps Script で **ファイル追加（＋）→ スクリプト** を作り、名前を `Contract` にして `Contract.gs` の中身を貼る。`Code.gs` も最新版に貼り替える。
+1. Apps Script で **ファイル追加（＋）→ スクリプト** を作り、名前を `Contract` にして `Contract.gs` の中身を貼る。同じように `ContractTemplates` を作って `ContractTemplates.gs`（契約書の文面）を貼る。`Code.gs` も最新版に貼り替える。
 2. **プロジェクトの設定 → スクリプト プロパティ** に追加：
    - `CONTRACT_PASSCODE` ＝ 契約を作るときの合言葉（自分だけが知る文字列）
    - `SITE_URL` ＝ 公開URLの先頭（例 `https://ユーザー名.github.io/arigatou-yoyaku/`）
@@ -110,7 +110,8 @@ Claude Codeの「リポジトリを選択」で `arigatou-yoyaku` を選べる�
 5. `contract.html` を GitHub にアップロード。`CONFIG.GAS_URL` は既存と同じURLでOK。
 
 ### 使い方
-- 自分（甲）：`.../contract.html` を開く → 種類選択・項目入力 → 手書きサイン → 合言葉を入れて送信
+- 自分（甲）：`.../contract.html` を開く → 合言葉を入れる → 種類選択・項目入力 → 手書きサイン → 表示されたリンクを相手に送る（相手のメールにも自動送信）
+- 契約書の文面は `ContractTemplates.gs` にあり、合言葉が合ったときだけ画面に届きます。公開ページのソースには文面が載りません。文面を変えたらApps Scriptに貼り直して新バージョンで再デプロイしてください。
 - 相手（乙）：メールのURLを開く → 内容確認 → 手書きサイン → 完了
 - 署名済みPDFはドライブの「電子契約」フォルダに保管され、双方にメールで届きます。一覧は「契約」シートで確認できます。
 
