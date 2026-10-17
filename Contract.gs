@@ -141,3 +141,11 @@ function contractPdfHtml_(o, aSig, bSig, signedAt) {
     '<br>甲メール：' + esc_(o["甲 メール"]) + '／乙メール：' + esc_(o["乙 メール"]) +
     '<br>本文ハッシュ(SHA-256)：' + esc_(o["本文ハッシュ(SHA-256)"]) + '</div></body></html>';
 }
+
+/* 紹介ノートなどから：署名済みか確かめる（合言葉が要る。本文・署名・メールは返さない） */
+function handleContractStatus_(d) {
+  const pass = PropertiesService.getScriptProperties().getProperty("CONTRACT_PASSCODE");
+  if (!pass || d.passcode !== pass) throw new Error("作成用パスコードが違います");
+  const c = findContract_(String(d.id || ""));
+  return { id: c.o["契約ID"], status: c.o["状態"], signedAt: c.o["乙署名日時"] || "", hash: c.o["本文ハッシュ(SHA-256)"] };
+}
