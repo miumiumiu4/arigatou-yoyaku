@@ -41,7 +41,7 @@ function handlePrep_(p) {
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    var ss = SpreadsheetApp.openById(SPREADSHEET_ID); // 受け口で使っている顧客ログのID（既存の定数名に合わせる）
+    var ss = SpreadsheetApp.getActive();
     var sh = ss.getSheetByName(PREP_SHEET);
     var head = prepHeader_();
     if (!sh) {
@@ -78,4 +78,21 @@ function handlePrep_(p) {
   }
   // events にも1行（既存の記録関数があればそれを使う：type=prep_d1 など）
   return out({ ok: true });
+}
+
+// ===== 集計用の書き出し（Mac の定期作業が読む）=====
+// doGet の先頭に
+//   if (e.parameter.t === 'prepexport') return prepExport_(e.parameter);
+// を足す。合言葉はスクリプトプロパティ PREP_EXPORT_KEY に入れる（コードやGitHubには書かない）。
+function prepExport_(p) {
+  var out = function (o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); };
+  var key = PropertiesService.getScriptProperties().getProperty('PREP_EXPORT_KEY');
+  if (!key || p.k !== key) return out({ ok: false });
+  var ss = SpreadsheetApp.getActive();
+  var read = function (name) {
+    var sh = ss.getSheetByName(name);
+    if (!sh || sh.getLastRow() < 1) return [];
+    return sh.getRange(1, 1, sh.getLastRow(), sh.getLastColumn()).getDisplayValues();
+  };
+  return out({ ok: true, prep: read(PREP_SHEET), survey: read('会議アンケート') });
 }
