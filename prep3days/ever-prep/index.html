@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>集客戦略準備の宿題｜集客戦略会議</title>
+<style>
+  :root { --bg:#F5F7FA; --card:#FFFFFF; --ink:#1B2433; --sub:#5B6676; --line:#D8DEE6; --navy:#1F3A5F; --accent:#E8833A; --sel:#EEF2F7; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#12161C; --card:#1B222C; --ink:#E8ECF1; --sub:#9AA6B5; --line:#2E3846; --navy:#8FB3E0; --accent:#F0A060; --sel:#243142; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Hiragino Sans","Noto Sans JP",sans-serif; font-size:18px; line-height:1.75; }
+  main { max-width:640px; margin:0 auto; padding:24px 16px 60px; }
+  h1 { font-size:24px; color:var(--navy); margin:0 0 4px; }
+  .lead { color:var(--sub); }
+  section { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px; }
+  .q { margin-top:22px; }
+  .q:first-child { margin-top:4px; }
+  .t { display:block; font-weight:700; }
+  .req { color:#C94F6D; font-size:14px; margin-left:6px; font-weight:600; }
+  .hint { color:var(--sub); font-size:16px; }
+  .opts { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .opts label { display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:8px; padding:10px 14px; cursor:pointer; }
+  .opts input { accent-color:var(--accent); width:20px; height:20px; }
+  .opts label:has(input:checked) { background:var(--sel); border-color:var(--navy); }
+  textarea, input[type=email], input[type=number], input[type=text] { width:100%; margin-top:8px; padding:12px; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--ink); font-size:18px; font-family:inherit; }
+  textarea { min-height:100px; }
+  button { margin-top:24px; width:100%; padding:16px; border:0; border-radius:10px; background:var(--accent); color:#fff; font-size:19px; font-weight:700; cursor:pointer; }
+  button:disabled { opacity:.6; }
+  .note { color:var(--sub); font-size:16px; margin-top:16px; }
+  .done { text-align:center; padding:40px 16px; }
+  .err { color:#C94F6D; margin-top:8px; }
+</style>
+</head>
+<body>
+<main>
+  <form id="f" novalidate>
+    <h1 id="title">集客戦略準備の宿題</h1>
+    <p class="lead" id="lead"></p>
+    <p class="hint">★のついた質問だけ答えてください。ほかは書けるところだけで大丈夫です。</p>
+    <section id="qs"></section>
+    <section>
+      <div class="q"><label class="t" for="mail">集客戦略会議をご予約いただいたメールアドレス<span class="req">★</span></label>
+        <div class="hint">会議の準備で、あなたの答えをまとめるためだけに使います。</div>
+        <input type="email" id="mail" name="mail" autocomplete="email" inputmode="email" maxlength="254"></div>
+    </section>
+    <button type="submit" id="send">宿題を送る</button>
+    <div class="err" id="err" hidden></div>
+    <p class="note">答えは、会議の準備と講座・サービスの改善にだけ使います。同じメールアドレスで送り直すと、新しい答えに置きかわります。</p>
+    <p class="note">運営：エイムポイント合同会社（ありがとうグループ）／お問い合わせ：info@arigatouosouji.com</p>
+  </form>
+  <div class="done" id="done" hidden>
+    <h1>ありがとうございます</h1>
+    <p id="doneMsg">宿題を受け取りました。会議でお会いします。</p>
+    <p>三浦</p>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="questions.js"></script>
+<script>
+(function () {
+  const qs = new URLSearchParams(location.search);
+  const day = ['1', '2', '3'].includes(qs.get('d')) ? qs.get('d') : '1';
+  const P = window.PREP[day];
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  document.getElementById('title').textContent = P.title;
+  document.getElementById('lead').textContent = P.lead;
+  document.title = P.title + '｜集客戦略会議';
+  const mailParam = qs.get('m') || '';
+  // UTAGEの差し込みが空のままだと %mail% が残るので、そのときは入れない
+  if (mailParam && mailParam.indexOf('%') < 0) document.getElementById('mail').value = mailParam;
+  const nameParam = (qs.get('n') || '').indexOf('%') < 0 ? (qs.get('n') || '') : '';
+
+  document.getElementById('qs').innerHTML = P.q.map(q => {
+    const star = q.req ? '<span class="req">★</span>' : '';
+    const lim = q.max && q.type === 'check' ? `<div class="hint">${q.max}つまで選べます</div>` : '';
+    let body = '';
+    if (q.type === 'radio' || q.type === 'check') {
+      const t = q.type === 'radio' ? 'radio' : 'checkbox';
+      body = `<div class="opts">${q.o.map(o => `<label><input type="${t}" name="${q.k}" value="${esc(o)}">${esc(o)}</label>`).join('')}</div>`;
+      return `<div class="q" data-k="${q.k}"><span class="t">${esc(q.t)}${star}</span>${lim}${body}</div>`;
+    }
+    if (q.type === 'number') body = `<input type="number" id="${q.k}" name="${q.k}" inputmode="numeric" min="${q.min}" max="${q.max}">`;
+    if (q.type === 'short') body = `<input type="text" id="${q.k}" name="${q.k}" maxlength="200">`;
+    if (q.type === 'text') body = `<textarea id="${q.k}" name="${q.k}" maxlength="2000"></textarea>`;
+    if (q.type === 'lines') body = Array.from({ length: q.n }, (_, i) => `<input type="text" name="${q.k}" maxlength="200" placeholder="${i + 1}つ目" aria-label="${esc(q.t)} ${i + 1}つ目">`).join('');
+    return `<div class="q" data-k="${q.k}"><label class="t" for="${q.k}">${esc(q.t)}${star}</label>${body}</div>`;
+  }).join('');
+
+  // 選べる数の上限
+  P.q.filter(q => q.type === 'check' && q.max).forEach(q => {
+    const boxes = document.querySelectorAll(`input[name="${q.k}"]`);
+    boxes.forEach(b => b.addEventListener('change', () => {
+      const n = [...boxes].filter(x => x.checked).length;
+      boxes.forEach(x => { if (!x.checked) x.disabled = n >= q.max; });
+    }));
+  });
+
+  document.getElementById('f').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const f = ev.target, err = document.getElementById('err'), btn = document.getElementById('send');
+    const fd = new FormData(f);
+    const val = q => q.type === 'check' || q.type === 'lines'
+      ? fd.getAll(q.k).map(v => v.toString().trim()).filter(Boolean)
+      : (fd.get(q.k) || '').toString().trim();
+    const missing = P.q.filter(q => q.req && (Array.isArray(val(q)) ? val(q).length === 0 : val(q) === ''));
+    const mail = (fd.get('mail') || '').toString().trim();
+    if (missing.length) { err.textContent = '★の質問に答えてください：' + missing.map(q => q.t).join('／'); err.hidden = false; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { err.textContent = 'ご予約のメールアドレスを確かめてください。'; err.hidden = false; return; }
+    const p = new URLSearchParams();
+    p.set('type', 'prep'); p.set('key', window.PREP_KEY); p.set('day', day);
+    p.set('mail', mail); p.set('name', nameParam);
+    const answers = {};
+    P.q.forEach(q => { const v = val(q); answers[q.k] = v; p.set(q.k, Array.isArray(v) ? v.join('、') : v); });
+    p.set('answers', JSON.stringify(answers));
+    btn.disabled = true; btn.textContent = '送信しています…'; err.hidden = true;
+    try {
+      await fetch(window.RECEIVER_URL, { method: 'POST', mode: 'no-cors', body: p });
+      f.hidden = true; document.getElementById('done').hidden = false; window.scrollTo(0, 0);
+    } catch (e) {
+      btn.disabled = false; btn.textContent = '宿題を送る';
+      err.textContent = '送信できませんでした。通信の状態を確かめて、もう一度お試しください。'; err.hidden = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
