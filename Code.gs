@@ -69,6 +69,7 @@ function doPost(e) {
   lock.waitLock(20000);
   try {
     const d = JSON.parse(e.postData.contents);
+    if (d.kind === "contract_templates") return json_(Object.assign({ ok: true }, handleContractTemplates_(d)));
     if (d.kind === "contract_create") return json_(Object.assign({ ok: true }, handleContractCreate_(d)));
     if (d.kind === "contract_sign")   return json_(Object.assign({ ok: true }, handleContractSign_(d)));
     if (d.kind === "contract_status") return json_(Object.assign({ ok: true }, handleContractStatus_(d)));
