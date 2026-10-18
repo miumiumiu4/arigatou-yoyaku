@@ -26,7 +26,7 @@ function sha256_(text) {
   return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text, Utilities.Charset.UTF_8)
     .map(function (b) { return ("0" + (b < 0 ? b + 256 : b).toString(16)).slice(-2); }).join("");
 }
-function fmtDate_(d) { return Utilities.formatDate(d, "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss"); }
+function contractFmtDate_(d) { return Utilities.formatDate(d, "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss"); }
 function esc_(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 function saveSignature_(dataUrl, name) {
   const m = /^data:image\/png;base64,(.+)$/.exec(dataUrl || "");
@@ -81,7 +81,7 @@ function handleContractCreate_(d) {
   const token = Utilities.getUuid().replace(/-/g, "");
   const sigId = saveSignature_(d.aSignature, id + "_A");
   const sh = ensureSheet_(SpreadsheetApp.getActiveSpreadsheet(), SHEET_CONTRACT, CONTRACT_HEADERS);
-  sh.appendRow([id, fmtDate_(new Date()), d.kind2 || "", d.title, d.body, sha256_(d.body),
+  sh.appendRow([id, contractFmtDate_(new Date()), d.kind2 || "", d.title, d.body, sha256_(d.body),
     d.aName, d.aEmail, d.bName, d.bEmail, token, "署名待ち", sigId, "", "", "", "", ""]);
 
   const url = d.signBase + "?id=" + id + "&t=" + token;
@@ -117,7 +117,7 @@ function handleContractSign_(d) {
   if (!d.agree) throw new Error("内容への同意にチェックしてください");
   const bSigId = saveSignature_(d.bSignature, d.id + "_B");
   const now = new Date();
-  const signedAt = fmtDate_(now);
+  const signedAt = contractFmtDate_(now);
   const html = contractPdfHtml_(o, sigDataUrl_(o["甲署名画像ID"]), sigDataUrl_(bSigId), signedAt);
   const pdf = Utilities.newBlob(html, "text/html", "x.html").getAs("application/pdf").setName(o["契約ID"] + "_" + o["タイトル"] + "_署名済.pdf");
   const file = contractFolder_().createFile(pdf);
