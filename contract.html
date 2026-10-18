@@ -88,6 +88,13 @@
     <div class="contract" id="sBody"></div>
     <p class="note">甲の署名：<br><img id="sSigA" class="sigimg" alt=""></p>
   </div>
+  <!-- 契約書の読み上げ動画（CONFIG.VIDEOS にある契約書のときだけ出す。最後まで見ると署名ボタンが押せる） -->
+  <div class="card hide" id="videoBox">
+    <h2>契約書の読み上げ動画</h2>
+    <p class="note">代表の三浦が契約書を読み上げています。<b>最後まで見ると、下の署名ボタンが押せるようになります。</b>（倍速再生でも大丈夫です）</p>
+    <div style="position:relative;padding-top:56.25%;background:#000;border-radius:10px;overflow:hidden"><div id="ytPlayer" style="position:absolute;inset:0"></div></div>
+    <p class="note" id="videoStatus">再生ボタンを押してください。</p>
+  </div>
   <div class="card" id="signBox">
     <h2>乙の署名</h2>
     <canvas id="padB"></canvas>
@@ -106,7 +113,9 @@
 <script>
 const CONFIG = {
   // README の手順で発行した Apps Script ウェブアプリURL（index.html と同じもの）
-  GAS_URL: "https://script.google.com/macros/s/AKfycbwzgjuZ_AdGByWhWuv4gSnQKBHVK3w96mrUbkED4ReAyFZIO9F-EZW8rECuwYMSxKlV/exec"
+  GAS_URL: "https://script.google.com/macros/s/AKfycbwzgjuZ_AdGByWhWuv4gSnQKBHVK3w96mrUbkED4ReAyFZIO9F-EZW8rECuwYMSxKlV/exec",
+  // 読み上げ動画（YouTube 限定公開）。契約書の題名にこの言葉が入っていたら、署名画面に出す。動画を足すときはここに1行追加
+  VIDEOS: { "プレミアムプラン": "y92IX92fR_8" }
 };
 
 /* ---------- 契約書テンプレート（合言葉が合ったときだけ Apps Script から受け取る） ---------- */
@@ -221,8 +230,11 @@ async function initSign(id, t){
     $("sMeta").textContent = `契約ID：${j.id}／作成：${j.createdAt}／甲：${j.aName}／乙：${j.bName}`;
     $("sBody").textContent = j.body; $("sSigA").src = j.aSignature;
     $("sign").classList.remove("hide"); initPad("padB","B");
+    let videoDone = !setupVideo(j.title);   // 動画がある契約書なら、最後まで見るまで署名できない
+    window.__videoDone = () => { videoDone = true; };
     $("btnSign").onclick = async () => {
       showErr("errSign","");
+      if(!videoDone) return showErr("errSign","先に読み上げ動画を最後まで見てください");
       if(!pads.B.drawn) return showErr("errSign","署名を書いてください");
       if(!$("agree").checked) return showErr("errSign","同意にチェックしてください");
       const btn = $("btnSign"); btn.disabled = true; btn.textContent = "署名中…（PDF作成に数十秒かかります）";
@@ -234,6 +246,26 @@ async function initSign(id, t){
       }catch(e){ showErr("errSign", e.message); btn.disabled = false; btn.textContent = "同意して署名する"; }
     };
   }catch(e){ $("sign").classList.add("hide"); $("fatal").textContent = "⚠ " + e.message; $("fatal").classList.remove("hide"); }
+}
+
+/* ---------- 読み上げ動画（YouTube IFrame API）。最後まで再生されたら署名ボタンを有効にする ---------- */
+function setupVideo(title){
+  const key = Object.keys(CONFIG.VIDEOS || {}).find(k => String(title || "").includes(k));
+  if(!key) return false;
+  const vid = CONFIG.VIDEOS[key];
+  $("videoBox").classList.remove("hide");
+  const btn = $("btnSign"); btn.disabled = true; btn.textContent = "動画を最後まで見ると署名できます";
+  const ready = () => {
+    new YT.Player("ytPlayer", { videoId: vid, playerVars: { rel: 0, modestbranding: 1, playsinline: 1 }, events: {
+      onStateChange: (e) => {
+        if(e.data === YT.PlayerState.PLAYING) $("videoStatus").textContent = "再生中… 最後まで見ると署名できます。";
+        if(e.data === YT.PlayerState.ENDED){ window.__videoDone(); btn.disabled = false; btn.textContent = "同意して署名する"; $("videoStatus").textContent = "✅ 最後まで見ました。下に署名して「同意して署名する」を押してください。"; $("signBox").scrollIntoView({behavior:"smooth"}); }
+      },
+      onError: () => { $("videoStatus").textContent = "⚠ 動画を読み込めませんでした。ページを開き直すか、甲にご連絡ください。"; }
+    }});
+  };
+  if(window.YT && YT.Player) ready(); else { window.onYouTubeIframeAPIReady = ready; const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); }
+  return true;
 }
 
 const q = new URLSearchParams(location.search);
