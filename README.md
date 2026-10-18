@@ -101,7 +101,7 @@ Claude Codeの「リポジトリを選択」で `arigatou-yoyaku` を選べる�
 
 例え話でいうと、**contract.html＝契約書を書いて判を押す机、Contract.gs＝押印済みの書類を封筒に入れて金庫（Googleドライブ）へしまう係**です。
 
-1. Apps Script で **ファイル追加（＋）→ スクリプト** を作り、名前を `Contract` にして `Contract.gs` の中身を貼る。同じように `ContractTemplates` を作って `ContractTemplates.gs`（契約書の文面）を貼る。`Code.gs` も最新版に貼り替える。
+1. Apps Script で **ファイル追加（＋）→ スクリプト** を作り、名前を `Contract` にして `Contract.gs` の中身を貼る。同じように `ContractTemplates` を作って `ContractTemplates.gs`（契約書の文面）を貼る。`Code.gs` は丸ごと貼らないでください（Apps Script側のメインファイル「コード」の方が新しく、空き確認などの機能が入っています）。`doPost` に `contract_create`・`contract_sign`・`contract_status`・`contract_templates` の振り分け行があるかだけ確かめ、無い行を足してください。
 2. **プロジェクトの設定 → スクリプト プロパティ** に追加：
    - `CONTRACT_PASSCODE` ＝ 契約を作るときの合言葉（自分だけが知る文字列）
    - `SITE_URL` ＝ 公開URLの先頭（例 `https://ユーザー名.github.io/arigatou-yoyaku/`）
