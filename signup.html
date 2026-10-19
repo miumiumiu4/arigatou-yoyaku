@@ -3,109 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src https://script.google.com https://script.googleusercontent.com; img-src 'self' data:; form-action 'none'; base-uri 'none'">
+<meta http-equiv="refresh" content="0; url=partner.html">
 <title>紹介パートナーのご登録｜ありがとうエアコンお掃除専門店</title>
-<style>
-  :root{--bg:#fffaf5;--card:#fff;--ink:#2b2420;--muted:#7a6b62;--line:#f0e2d6;--or:#f26b1d;--or-soft:#fff1e6;--green:#1f8a70;--warn:#c0392b}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.8 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
-  main{max-width:560px;margin:0 auto;padding:24px 16px 48px}
-  h1{font-size:22px;line-height:1.5;margin:0 0 8px}
-  .lead{color:var(--muted);margin:0 0 20px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:0 0 16px}
-  .points{margin:0;padding-left:1.2em}
-  .points li{margin:4px 0}
-  label{display:block;font-weight:600;margin:14px 0 4px}
-  .hint{font-weight:400;color:var(--muted);font-size:14px}
-  input[type=text],input[type=email],input[type=url]{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:#fff}
-  .choices label{font-weight:400;display:flex;gap:8px;align-items:center;margin:6px 0}
-  .agree{display:flex;gap:10px;align-items:flex-start;font-weight:400}
-  button{width:100%;margin-top:18px;padding:14px;border:0;border-radius:12px;background:var(--or);color:#fff;font-size:17px;font-weight:700}
-  button:disabled{opacity:.6}
-  .msg{margin-top:14px;padding:12px;border-radius:10px;display:none}
-  .msg.ok{display:block;background:#e8f5f0;color:var(--green)}
-  .msg.ng{display:block;background:#fdecea;color:var(--warn)}
-  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-  .small{font-size:14px;color:var(--muted)}
-</style>
+<script>location.replace("partner.html" + location.search);</script>
 </head>
-<body>
-<main>
-  <h1>紹介パートナーのご登録</h1>
-  <p class="lead">エアコンクリーニングを、ご家族・お知り合い・読者の方にご紹介ください。</p>
-
-  <div class="card">
-    <ul class="points">
-      <li>ご登録は<strong>無料</strong>です。費用は一切かかりません。</li>
-      <li>ご紹介の方のお支払いが済むと、通常価格合計の<strong>20%</strong>を紹介料としてお振り込みします。</li>
-      <li>ご登録のあと、契約書の署名のご案内がメールで届きます。署名がお済みになると、あなた専用の紹介者番号が届きます。</li>
-      <li>ブログやSNSでご紹介いただくときは、本文に「PR」または「紹介料を受け取っています」と書いてください。</li>
-    </ul>
-  </div>
-
-  <form id="f" class="card" novalidate>
-    <label for="name">お名前</label>
-    <input id="name" type="text" maxlength="40" autocomplete="name" required>
-
-    <label for="email">メールアドレス <span class="hint">（契約書と紹介料のお知らせが届きます）</span></label>
-    <input id="email" type="email" maxlength="120" autocomplete="email" required>
-
-    <label>あてはまるもの</label>
-    <div class="choices">
-      <label><input type="radio" name="kindOf" value="お客様"> お店を使ったことがある</label>
-      <label><input type="radio" name="kindOf" value="知り合い"> お店の知り合い・家族</label>
-      <label><input type="radio" name="kindOf" value="外部"> ブログ・SNS・動画などで紹介したい</label>
-    </div>
-
-    <div id="mediaBox" style="display:none">
-      <label for="media">発信している場所のURL <span class="hint">（https から）</span></label>
-      <input id="media" type="url" maxlength="300" placeholder="https://">
-      <p class="small">ブログ・SNSの方は、お店で発信の場所を拝見してから有効にします。</p>
-    </div>
-
-    <label for="up">紹介してくれた方の番号 <span class="hint">（あれば）</span></label>
-    <input id="up" type="text" maxlength="20" placeholder="例 C000-A0001">
-
-    <div class="hp" aria-hidden="true"><label for="website">ここは空のまま</label><input id="website" type="text" tabindex="-1" autocomplete="off"></div>
-
-    <label class="agree"><input id="agree" type="checkbox"> <span>契約書の署名のご案内をメールで受け取ることに同意します。</span></label>
-
-    <button id="send" type="submit">登録する</button>
-    <div id="msg" class="msg" role="status"></div>
-  </form>
-
-  <p class="small">ご紹介した方のお名前などは、個人情報のためお知らせしません。お知らせするのは件数と金額だけです。</p>
-</main>
-<script>
-const CONFIG = {
-  // 紹介ノートのウェブアプリのURL（…/exec）。本番に入れたあとで貼る
-  AFF_URL: "https://script.google.com/macros/s/AKfycbx07ZKZmewPVZPrHJd6LVgyrBr7sxMps17ekFNmpkMPxtbi2ZFfwfYIqyhB2tK0WNaNbA/exec"
-};
-const $ = id => document.getElementById(id);
-const q = new URLSearchParams(location.search);
-if (q.get("up")) $("up").value = q.get("up").slice(0, 20);
-document.querySelectorAll('input[name=kindOf]').forEach(r => r.addEventListener("change", () => {
-  $("mediaBox").style.display = document.querySelector('input[name=kindOf]:checked').value === "外部" ? "block" : "none";
-}));
-function show(ok, text) { const m = $("msg"); m.className = "msg " + (ok ? "ok" : "ng"); m.textContent = text; }
-$("f").addEventListener("submit", async ev => {
-  ev.preventDefault();
-  const k = document.querySelector('input[name=kindOf]:checked');
-  if (!$("name").value.trim()) return show(false, "お名前を入れてください");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("email").value.trim())) return show(false, "メールアドレスを確かめてください");
-  if (!k) return show(false, "あてはまるものを選んでください");
-  if (!$("agree").checked) return show(false, "同意のチェックを入れてください");
-  $("send").disabled = true;
-  try {
-    const r = await fetch(CONFIG.AFF_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({
-      kind: "signup", name: $("name").value, email: $("email").value, kindOf: k.value, media: $("media").value,
-      introducedBy: $("up").value, agree: $("agree").checked, website: $("website").value
-    }) });
-    const j = await r.json();
-    if (j.ok) { show(true, j.queued ? "ご登録ありがとうございます。お申し込みが多いため、契約書の署名のご案内は順番にメールでお送りします（数日かかることがあります）。届かないときは、迷惑メールのフォルダもご覧ください。" : "ご登録ありがとうございます。契約書の署名のご案内をメールでお送りします。届かないときは、迷惑メールのフォルダもご覧ください。"); $("f").querySelectorAll("input,button").forEach(e => e.disabled = true); }
-    else { show(false, j.reason || "受け付けできませんでした。もう一度お試しください"); $("send").disabled = false; }
-  } catch (e) { show(false, "つながりませんでした。少し待ってもう一度お試しください"); $("send").disabled = false; }
-});
-</script>
+<body style="font:18px/1.8 system-ui,sans-serif;padding:24px">
+<p>登録ページは移りました。<a href="partner.html">こちらから</a>ご登録ください。</p>
 </body>
 </html>
