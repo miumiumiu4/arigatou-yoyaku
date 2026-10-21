@@ -130,6 +130,7 @@ function handleContractSign_(d) {
   set("署名済PDF URL", file.getUrl());
   set("署名トークン", "");            // 署名後はリンクを無効化
   set("状態", "署名済み");
+  applyMarkSigned_(o["契約ID"], signedAt, file.getUrl());   // 申込みから作った契約なら「契約申込み」シートも更新（ContractApply.gs）
 
   const body = "契約書「" + o["タイトル"] + "」の署名が完了しました。\n契約ID：" + o["契約ID"] +
     "\n署名日時：" + signedAt + "\n本文ハッシュ(SHA-256)：" + o["本文ハッシュ(SHA-256)"] + "\n\n署名済みPDFを添付しています。大切に保管してください。";

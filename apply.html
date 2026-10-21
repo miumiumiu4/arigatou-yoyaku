@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ご契約のお申込み｜ありがとうエアコンお掃除専門店</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{--bg:#fff8f1;--card:#fff;--ink:#2b2017;--muted:#7a6a5c;--line:#ecdccd;--or:#e07a2f}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;line-height:1.7}
+  header{background:var(--or);color:#fff;padding:16px}
+  header h1{margin:0;font-size:19px}
+  main{max-width:640px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .card h2{margin:0 0 10px;font-size:16px}
+  label{display:block;font-weight:600;margin:12px 0 4px}
+  label small{font-weight:400;color:var(--muted)}
+  input,textarea{width:100%;padding:11px;border:1px solid #e3d3c5;border-radius:8px;font:inherit;background:#fff}
+  textarea{min-height:80px}
+  .kind{display:flex;flex-direction:column;gap:8px}
+  .kind label{display:flex;gap:10px;align-items:flex-start;font-weight:500;border:1.5px solid var(--line);border-radius:10px;padding:12px;margin:0;cursor:pointer}
+  .kind input{width:auto;margin-top:5px}
+  .kind label:has(input:checked){border-color:var(--or);background:#fff2e6}
+  .kind small{display:block;color:var(--muted);font-weight:400}
+  .chk{display:flex;gap:8px;align-items:flex-start;font-weight:500}
+  .chk input{width:auto;margin-top:6px}
+  button{width:100%;padding:14px;border:0;border-radius:10px;background:var(--or);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;margin-top:12px}
+  button:disabled{opacity:.5}
+  .err{color:#b3261e;margin-top:8px;display:none}
+  .ok{background:#e9f7ec;border:1px solid #b9e2c2;border-radius:12px;padding:16px;display:none}
+  .note{color:var(--muted);font-size:13px}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+</style>
+</head>
+<body>
+<header><h1>ご契約のお申込み</h1></header>
+<main>
+<form id="f" novalidate>
+  <div class="card">
+    <h2>① 契約の種類</h2>
+    <div class="kind">
+      <label><input type="radio" name="type" value="kamei"><span>加盟（プレミアムプラン）<small>ありがとう大学研修・ボランタリーチェーンへの加盟</small></span></label>
+      <label><input type="radio" name="type" value="gyomu"><span>スタッフ（業務委託）<small>ありがとうエアコンお掃除専門店の現場を担当する業務委託</small></span></label>
+    </div>
+  </div>
+  <div class="card">
+    <h2>② お客様の情報</h2>
+    <label>お名前<small>（契約書に載ります）</small></label><input id="name" autocomplete="name" required>
+    <label>フリガナ</label><input id="kana">
+    <label>郵便番号・住所</label><input id="address" autocomplete="street-address" placeholder="〒000-0000 都道府県から" required>
+    <label>電話番号</label><input id="tel" type="tel" autocomplete="tel" required>
+    <label>メールアドレス<small>（契約書の署名のお願いが届きます）</small></label><input id="email" type="email" autocomplete="email" required>
+    <label>屋号・会社名<small>（あれば）</small></label><input id="shop">
+    <label>ご質問・ご要望<small>（あれば）</small></label><textarea id="note"></textarea>
+    <div class="hp" aria-hidden="true"><label>ウェブサイト</label><input id="website" tabindex="-1" autocomplete="off"></div>
+  </div>
+  <div class="card">
+    <label class="chk"><input type="checkbox" id="agree"><span>入力した内容で契約書を作ることに同意します。内容を確認したあと、契約書の署名のお願いがメールで届きます。</span></label>
+    <button id="go" type="submit">申し込む</button>
+    <div class="err" id="err"></div>
+  </div>
+</form>
+<div class="ok" id="done"></div>
+<p class="note">お申込みの情報は、契約書の作成とご連絡のためだけに使います。</p>
+</main>
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwzgjuZ_AdGByWhWuv4gSnQKBHVK3w96mrUbkED4ReAyFZIO9F-EZW8rECuwYMSxKlV/exec";
+const $ = id => document.getElementById(id);
+const showErr = m => { $("err").textContent = m; $("err").style.display = m ? "block" : "none"; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const q = new URLSearchParams(location.search);
+if (q.get("type")) { const r = document.querySelector(`input[name=type][value="${q.get("type")}"]`); if (r) r.checked = true; }
+$("f").onsubmit = async ev => {
+  ev.preventDefault(); showErr("");
+  const type = (document.querySelector("input[name=type]:checked") || {}).value;
+  const d = { kind: "contract_apply", type, name: $("name").value.trim(), kana: $("kana").value.trim(), address: $("address").value.trim(),
+              tel: $("tel").value.trim(), email: $("email").value.trim(), shop: $("shop").value.trim(), note: $("note").value.trim(), website: $("website").value };
+  if (!type) return showErr("契約の種類を選んでください");
+  if (!d.name || !d.address || !d.tel) return showErr("お名前・住所・電話番号を入力してください");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return showErr("メールアドレスを確認してください");
+  if (!$("agree").checked) return showErr("同意にチェックしてください");
+  const btn = $("go"); btn.disabled = true; btn.textContent = "送信中…";
+  try {
+    const r = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(d) });
+    const j = await r.json(); if (!j.ok) throw new Error(String(j.error).replace(/^Error:\s*/, ""));
+    $("f").style.display = "none";
+    $("done").innerHTML = `✅ お申込みを受け付けました（受付番号：<b>${esc(j.id)}</b>）。<br>内容を確認のうえ、<b>${esc(d.email)}</b> に契約書の署名のお願いをお送りします。<br><span class="note">受付のメールも届いています。届かないときは迷惑メールのフォルダもご確認ください。</span>`;
+    $("done").style.display = "block"; window.scrollTo(0, 0);
+  } catch (e) { showErr("送信できませんでした：" + e.message); btn.disabled = false; btn.textContent = "申し込む"; }
+};
+</script>
+</body>
+</html>
