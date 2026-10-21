@@ -80,6 +80,30 @@
   <div class="ok hide" id="doneCreate"></div>
 </section>
 
+<!-- ============ 確認モード（甲：申込みから来た契約を確認して署名） ============ -->
+<section id="review" class="hide">
+  <div class="card">
+    <h2>新しい契約の申込み</h2>
+    <p class="note" id="rMeta"></p>
+    <div class="contract" id="rApplicant" style="white-space:pre-wrap"></div>
+  </div>
+  <div class="card">
+    <h2 id="rTitle"></h2>
+    <p class="note">この文面で相手に送ります。人ごとに条件を変えるときは、ここで直してください（直すと題名に「個別条件」が付き、全員用の読み上げ動画は出ません）。</p>
+    <textarea id="rBody" style="min-height:420px;font-size:13px;line-height:1.7"></textarea>
+    <p><button class="ghost" type="button" id="rReset">直す前の文面に戻す</button></p>
+  </div>
+  <div class="card" id="rSignBox">
+    <h2>甲の署名</h2>
+    <p class="note">指またはマウスで、下の枠にサインを書いてください。合言葉は要りません（このリンク自体があなた専用の鍵です）。</p>
+    <canvas id="padR"></canvas>
+    <p><button class="ghost" type="button" onclick="clearPad('R')">書き直す</button></p>
+    <button class="primary" id="btnReview" type="button">署名して、相手に署名のお願いを送る</button>
+    <div class="err" id="errReview"></div>
+  </div>
+  <div class="ok hide" id="doneReview"></div>
+</section>
+
 <!-- ============ 署名モード（乙） ============ -->
 <section id="sign" class="hide">
   <div class="card">
@@ -250,6 +274,7 @@ async function initSign(id, t){
 
 /* ---------- 読み上げ動画（YouTube IFrame API）。最後まで再生されたら署名ボタンを有効にする ---------- */
 function setupVideo(title){
+  if (String(title || "").includes("個別条件")) return false;   // 人ごとに文面を直した契約は、全員用の動画と内容が違うので出さない
   const key = Object.keys(CONFIG.VIDEOS || {}).find(k => String(title || "").includes(k));
   if(!key) return false;
   const vid = CONFIG.VIDEOS[key];
@@ -268,8 +293,36 @@ function setupVideo(title){
   return true;
 }
 
+/* ---------- 確認モード（甲） ---------- */
+async function initReview(id, k){
+  try{
+    const r = await fetch(`${CONFIG.GAS_URL}?action=contract_review_get&id=${encodeURIComponent(id)}&k=${encodeURIComponent(k)}`);
+    const j = await r.json(); if(!j.ok) throw new Error(j.error);
+    if(j.status !== "甲の確認待ち") throw new Error("この契約はすでに相手に送付済みです（" + j.status + "）");
+    const a = j.applicant;
+    $("rMeta").textContent = `契約ID：${j.id}／受付：${a.at}`;
+    $("rApplicant").textContent = `種類：${a.type}\nお名前：${a.name}${a.kana ? "（" + a.kana + "）" : ""}\n住所：${a.address}\n電話：${a.tel}\nメール：${a.email}` + (a.shop ? `\n屋号・会社名：${a.shop}` : "") + (a.note ? `\n備考：${a.note}` : "");
+    $("rTitle").textContent = j.title;
+    $("rBody").value = j.body;
+    $("rReset").onclick = () => { $("rBody").value = j.body; };
+    $("review").classList.remove("hide"); initPad("padR","R");
+    $("btnReview").onclick = async () => {
+      showErr("errReview","");
+      if(!pads.R.drawn) return showErr("errReview","署名を書いてください");
+      const btn = $("btnReview"); btn.disabled = true; btn.textContent = "送信中…";
+      try{
+        const res = await post({kind:"contract_review_sign", id, k, body: $("rBody").value, aSignature: pads.R.c.toDataURL("image/png")});
+        $("rSignBox").classList.add("hide");
+        $("doneReview").innerHTML = `✅ 署名して、${esc(a.name)} 様に署名のお願いのメールを送りました。<br>契約ID：<b>${esc(res.id)}</b>／題名：${esc(res.title)}<br><span class="note">相手が署名すると、署名済みPDFが双方にメールで届きます。このページは閉じて構いません。</span>`;
+        $("doneReview").classList.remove("hide"); $("doneReview").scrollIntoView({behavior:"smooth"});
+      }catch(e){ showErr("errReview", e.message); btn.disabled = false; btn.textContent = "署名して、相手に署名のお願いを送る"; }
+    };
+  }catch(e){ $("review").classList.add("hide"); $("fatal").textContent = "⚠ " + e.message; $("fatal").classList.remove("hide"); }
+}
+
 const q = new URLSearchParams(location.search);
-if(q.get("id") && q.get("t")) initSign(q.get("id"), q.get("t")); else initLogin();
+if(q.get("review") && q.get("k")) initReview(q.get("review"), q.get("k"));
+else if(q.get("id") && q.get("t")) initSign(q.get("id"), q.get("t")); else initLogin();
 </script>
 </body>
 </html>

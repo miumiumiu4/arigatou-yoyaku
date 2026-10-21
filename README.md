@@ -97,6 +97,14 @@ Claude Codeの「リポジトリを選択」で `arigatou-yoyaku` を選べる�
 
 ---
 
+### 申込みから契約まで（2026-10-21 追加）
+- 相手が `apply.html`（例 `https://miumiumiu4.github.io/arigatou-yoyaku/apply.html`。`?type=kamei` や `?type=gyomu` を付けると種類を選んだ状態で開く）で入力
+- → 契約書の文面ができて、甲（スクリプトプロパティ `CONTRACT_OWNER_EMAIL`、無ければ `NOTIFY_EMAIL`）に「確認して署名する」リンクのメール
+- → 甲が `contract.html?review=…&k=…` で文面を確認・必要なら直してサイン（合言葉は不要。リンクが鍵）→ 乙に署名依頼のメール
+- → 乙が読み上げ動画を見て署名 → 署名済みPDFが双方に。「契約」シートと「契約申込み」シート（申込みの情報・状態・PDF）の両方が「署名済み」になる
+- 文面を直した契約は題名に「（個別条件）」が付き、全員用の読み上げ動画は出ない
+- 受付は `ContractApply.gs`。`Code.gs`（本番の「コード」）の doPost に `contract_apply`・`contract_review_sign`、doGet に `contract_review_get` の振り分けを足す
+
 ## 電子契約（contract.html）のセットアップ
 
 例え話でいうと、**contract.html＝契約書を書いて判を押す机、Contract.gs＝押印済みの書類を封筒に入れて金庫（Googleドライブ）へしまう係**です。
