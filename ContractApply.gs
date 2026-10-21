@@ -24,7 +24,12 @@ const APPLY_KINDS = {
 const APPLY_SITE_DEFAULT = "https://miumiumiu4.github.io/arigatou-yoyaku/";
 
 function applyProp_(k, d) { return PropertiesService.getScriptProperties().getProperty(k) || d; }
-function applyOwnerEmail_() { return applyProp_("CONTRACT_OWNER_EMAIL", applyProp_("NOTIFY_EMAIL", Session.getEffectiveUser().getEmail())); }
+function applyOwnerEmail_() {
+  // 申込みの知らせ先。CONTRACT_OWNER_EMAIL → NOTIFY_EMAIL の順に読む（Session は使わない：userinfo.email の権限が要るため）
+  const to = applyProp_("CONTRACT_OWNER_EMAIL", "") || applyProp_("NOTIFY_EMAIL", "");
+  if (!to) throw new Error("知らせ先のメール（スクリプトプロパティ NOTIFY_EMAIL）がありません");
+  return to;
+}
 function applySite_() { const s = applyProp_("SITE_URL", APPLY_SITE_DEFAULT); return s.endsWith("/") ? s : s + "/"; }
 function applyClean_(s, max) { return String(s == null ? "" : s).replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max || 200); }
 
