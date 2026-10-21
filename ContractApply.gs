@@ -75,6 +75,7 @@ function handleContractApply_(d) {
     aName, owner, name, email, "", "甲の確認待ち", "", "", "", "", "", ""]);
   ensureSheet_(ss, SHEET_APPLY, APPLY_HEADERS).appendRow([id, contractFmtDate_(new Date()), kind.label, name, kana, addr, "'" + tel, email, shop, note,
     "甲の確認待ち", "", "", "", key]);
+  logEvent_(id, "申込みを受付", kind.label + "／" + name + "（" + email + "）／本文ハッシュ：" + sha256_(body));
   cache.put("apply_count", String(n + 1), 3600);
   cache.put(perMail, "1", 600);
 
@@ -134,6 +135,7 @@ function handleContractReviewSign_(d) {
   const now = contractFmtDate_(new Date());
   applySet_(a, "状態", "乙の署名待ち"); applySet_(a, "甲 署名日時", now); applySet_(a, "確認キー", "");
 
+  logEvent_(a.o["契約ID"], "甲が確認して署名・乙へ送付", "題名：" + title + "／本文ハッシュ：" + sha256_(body) + (body !== c.o["本文"] ? "／申込み時の文面から直した" : ""));
   const url = applySite_() + "contract.html?id=" + a.o["契約ID"] + "&t=" + token;
   const bName = c.o["乙 氏名"], aName = c.o["甲 氏名"];
   safeMail_(c.o["乙 メール"], "【電子契約】" + title + " への署名のお願い",

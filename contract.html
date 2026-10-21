@@ -119,8 +119,19 @@
     <div style="position:relative;padding-top:56.25%;background:#000;border-radius:10px;overflow:hidden"><div id="ytPlayer" style="position:absolute;inset:0"></div></div>
     <p class="note" id="videoStatus">再生ボタンを押してください。</p>
   </div>
+  <!-- 重要事項の個別確認（本文にその条項があるものだけ出す） -->
+  <div class="card hide" id="keyBox">
+    <h2>大事なところの確認</h2>
+    <p class="note">契約書の中でも、特に大事なところです。読んで、ひとつずつチェックを入れてください。</p>
+    <div id="keyList"></div>
+  </div>
   <div class="card" id="signBox">
-    <h2>乙の署名</h2>
+    <h2>ご本人の確認</h2>
+    <p class="note">ご本人の確認のため、このメールアドレスに6桁の確認コードをお送りします。届いたコードを入力してください。</p>
+    <button class="ghost" type="button" id="btnOtp">確認コードをメールで送る</button>
+    <p class="note" id="otpMsg"></p>
+    <input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6桁の確認コード">
+    <h2 style="margin-top:18px">乙の署名</h2>
     <canvas id="padB"></canvas>
     <p><button class="ghost" type="button" onclick="clearPad('B')">書き直す</button></p>
     <label class="chk"><input type="checkbox" id="agree"><span>上記の契約内容を確認し、内容に同意します。</span></label>
@@ -139,6 +150,17 @@ const CONFIG = {
   // README の手順で発行した Apps Script ウェブアプリURL（index.html と同じもの）
   GAS_URL: "https://script.google.com/macros/s/AKfycbwzgjuZ_AdGByWhWuv4gSnQKBHVK3w96mrUbkED4ReAyFZIO9F-EZW8rECuwYMSxKlV/exec",
   // 読み上げ動画（YouTube 限定公開）。契約書の題名にこの言葉が入っていたら、署名画面に出す。動画を足すときはここに1行追加
+  // 大事なところの個別確認。本文に need の言葉があるときだけ出す
+  KEY_POINTS: [
+    { need: "研修費用を支払う", text: b => { const m = b.match(/一括払いの場合は金(.+?)（税込）、分割払いの場合は金(.+?)（税込）/); return "研修費用を契約から8日以内に支払います" + (m ? `（一括払いなら${m[1]}、分割・クレジットなら総額${m[2]}。いずれも税込）` : "") + "（第4条）"; } },
+    { need: "違約金・損害賠償を請求し得る", text: () => "研修費用の支払いを怠ったり、不誠実な対応を繰り返した場合は、違約金・損害賠償を請求されることがあります（第4条）" },
+    { need: "月額ロイヤリティ", text: b => { const m = b.match(/月額ロイヤリティとして[^金]*金([０-９0-9，,]+円)/); return "月額ロイヤリティ" + (m ? m[1] : "") + "（税込）を毎月支払います（第7条）"; } },
+    { need: "返還を請求することはできない", text: () => "途中でやめても、支払った加盟金・研修費用は返ってきません（第20条の4）" },
+    { need: "500現場", text: () => "研修中や研修のあと、500現場を終える前にやめた場合は、100万円を支払います（第4条）" },
+    { need: "損害賠償金を支払う", text: () => "仕事で知ったノウハウなどを外に漏らした場合は、100万円（税別）を支払います（第15条）" },
+    { need: "直接取引", text: () => "ありがとうを通じて知り合ったお客様と、直接取引はしません。違反すると違約金がかかります（第4条・第12条）" },
+    { need: "被用者となってはならない", text: () => "契約が終わってから1年間は、同じ都道府県でエアコン清掃業を営んだり、その会社に雇われたりしません（第19条）" }
+  ],
   VIDEOS: { "プレミアムプラン": "y92IX92fR_8", "業務委託契約書": "pghfMb3Fd9s" }
 };
 
@@ -254,18 +276,39 @@ async function initSign(id, t){
     $("sMeta").textContent = `契約ID：${j.id}／作成：${j.createdAt}／甲：${j.aName}／乙：${j.bName}`;
     $("sBody").textContent = j.body; $("sSigA").src = j.aSignature;
     $("sign").classList.remove("hide"); initPad("padB","B");
-    let videoDone = !setupVideo(j.title);   // 動画がある契約書なら、最後まで見るまで署名できない
-    window.__videoDone = () => { videoDone = true; };
+    const videoRequired = setupVideo(j.title);   // 動画がある契約書なら、最後まで見るまで署名できない
+    let videoDone = !videoRequired, videoEndedAt = "";
+    window.__videoDone = () => { videoDone = true; videoEndedAt = new Date().toISOString(); };
+    // 大事なところの個別確認
+    const points = (CONFIG.KEY_POINTS || []).filter(p => String(j.body).includes(p.need)).map(p => p.text(String(j.body)));
+    if (points.length) {
+      $("keyList").innerHTML = points.map((t, i) => `<label class="chk"><input type="checkbox" class="kp" data-i="${i}"><span>${esc(t)}</span></label>`).join("");
+      $("keyBox").classList.remove("hide");
+    }
+    // 確認コード
+    $("btnOtp").onclick = async () => {
+      showErr("errSign",""); const b = $("btnOtp"); b.disabled = true; b.textContent = "送信中…";
+      try { const r = await post({kind:"contract_otp_send", id, t}); $("otpMsg").textContent = `${r.to} に確認コードを送りました（15分間有効）。届かないときは迷惑メールも見てください。`; b.textContent = "確認コードをもう一度送る"; }
+      catch(e){ showErr("errSign", e.message); b.textContent = "確認コードをメールで送る"; }
+      b.disabled = false;
+    };
     $("btnSign").onclick = async () => {
       showErr("errSign","");
       if(!videoDone) return showErr("errSign","先に読み上げ動画を最後まで見てください");
+      if([...document.querySelectorAll(".kp")].some(x => !x.checked)) return showErr("errSign","「大事なところの確認」をすべてチェックしてください");
+      if(!/^\d{6}$/.test($("otp").value.trim())) return showErr("errSign","メールに届いた6桁の確認コードを入力してください（まだなら「確認コードをメールで送る」を押してください）");
       if(!pads.B.drawn) return showErr("errSign","署名を書いてください");
       if(!$("agree").checked) return showErr("errSign","同意にチェックしてください");
-      const btn = $("btnSign"); btn.disabled = true; btn.textContent = "署名中…（PDF作成に数十秒かかります）";
+      const btn = $("btnSign"); btn.disabled = true; btn.textContent = "署名中…（書面の作成に数十秒かかります）";
       try{
-        await post({kind:"contract_sign", id, t, agree:true, bSignature: pads.B.c.toDataURL("image/png"), userAgent: navigator.userAgent});
-        $("signBox").classList.add("hide");
-        $("doneSign").innerHTML = "✅ 署名が完了しました。署名済みPDFをメールでお送りします。このページは閉じて構いません。";
+        const vidKey = Object.keys(CONFIG.VIDEOS || {}).find(k => String(j.title || "").includes(k));
+        const shownHash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(j.body))))].map(b => b.toString(16).padStart(2, "0")).join("");
+        const r = await post({kind:"contract_sign", id, t, agree:true, otp: $("otp").value.trim(), consents: points, shownHash,
+          video: { required: videoRequired, watched: videoDone, endedAt: videoEndedAt, id: vidKey ? CONFIG.VIDEOS[vidKey] : "" },
+          bSignature: pads.B.c.toDataURL("image/png"), userAgent: navigator.userAgent});
+        $("signBox").classList.add("hide"); $("keyBox").classList.add("hide");
+        $("doneSign").innerHTML = "✅ 署名が完了しました。署名済みの書面（最後のページが合意締結証明書）と、時刻の証明ファイルをメールでお送りします。このページは閉じて構いません。" +
+          (r.tsTime ? `<br><span class="note">第三者タイムスタンプ：${esc(r.tsTime)}</span>` : "");
         $("doneSign").classList.remove("hide");
       }catch(e){ showErr("errSign", e.message); btn.disabled = false; btn.textContent = "同意して署名する"; }
     };
