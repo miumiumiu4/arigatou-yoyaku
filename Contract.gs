@@ -32,9 +32,16 @@ function saveSignature_(dataUrl, name) {
   const m = /^data:image\/png;base64,(.+)$/.exec(dataUrl || "");
   if (!m) throw new Error("署名が正しくありません");
   const blob = Utilities.newBlob(Utilities.base64Decode(m[1]), "image/png", name + ".png");
-  return contractFolder_().createFile(blob).getId();
+  // ドライブに保存できないとき（権限がまだ無いなど）は、署名の画像そのものをシートに残す
+  try { return contractFolder_().createFile(blob).getId(); }
+  catch (e) {
+    console.warn("署名をドライブに保存できず、シートに保存します", e);
+    if (dataUrl.length > 48000) throw new Error("署名の画像が大きすぎます。小さめに書き直してください");
+    return dataUrl;
+  }
 }
 function sigDataUrl_(fileId) {
+  if (String(fileId).indexOf("data:") === 0) return String(fileId);   // シートに保存した署名
   const b = DriveApp.getFileById(fileId).getBlob();
   return "data:image/png;base64," + Utilities.base64Encode(b.getBytes());
 }
@@ -120,17 +127,19 @@ function handleContractSign_(d) {
   const signedAt = contractFmtDate_(now);
   const html = contractPdfHtml_(o, sigDataUrl_(o["甲署名画像ID"]), sigDataUrl_(bSigId), signedAt);
   const pdf = Utilities.newBlob(html, "text/html", "x.html").getAs("application/pdf").setName(o["契約ID"] + "_" + o["タイトル"] + "_署名済.pdf");
-  const file = contractFolder_().createFile(pdf);
+  let pdfId = "", pdfUrl = "（ドライブに保存できず。PDF は甲乙へのメールに添付）";
+  try { const file = contractFolder_().createFile(pdf); pdfId = file.getId(); pdfUrl = file.getUrl(); }
+  catch (e) { console.warn("PDF をドライブに保存できず、メール添付だけにします", e); }
 
   const set = function (h, v) { c.sh.getRange(c.row, CONTRACT_HEADERS.indexOf(h) + 1).setValue(v); };
   set("乙署名画像ID", bSigId);
   set("乙署名日時", signedAt);
   set("乙端末情報", String(d.userAgent || "").slice(0, 300));
-  set("署名済PDF ID", file.getId());
-  set("署名済PDF URL", file.getUrl());
+  set("署名済PDF ID", pdfId);
+  set("署名済PDF URL", pdfUrl);
   set("署名トークン", "");            // 署名後はリンクを無効化
   set("状態", "署名済み");
-  applyMarkSigned_(o["契約ID"], signedAt, file.getUrl());   // 申込みから作った契約なら「契約申込み」シートも更新（ContractApply.gs）
+  applyMarkSigned_(o["契約ID"], signedAt, pdfUrl);   // 申込みから作った契約なら「契約申込み」シートも更新（ContractApply.gs）
 
   const body = "契約書「" + o["タイトル"] + "」の署名が完了しました。\n契約ID：" + o["契約ID"] +
     "\n署名日時：" + signedAt + "\n本文ハッシュ(SHA-256)：" + o["本文ハッシュ(SHA-256)"] + "\n\n署名済みPDFを添付しています。大切に保管してください。";
