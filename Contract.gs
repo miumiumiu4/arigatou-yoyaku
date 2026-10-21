@@ -26,15 +26,22 @@ function sha256_(text) {
   return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text, Utilities.Charset.UTF_8)
     .map(function (b) { return ("0" + (b < 0 ? b + 256 : b).toString(16)).slice(-2); }).join("");
 }
-function fmtDate_(d) { return Utilities.formatDate(d, "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss"); }
+function contractFmtDate_(d) { return Utilities.formatDate(d, "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss"); }
 function esc_(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 function saveSignature_(dataUrl, name) {
   const m = /^data:image\/png;base64,(.+)$/.exec(dataUrl || "");
   if (!m) throw new Error("署名が正しくありません");
   const blob = Utilities.newBlob(Utilities.base64Decode(m[1]), "image/png", name + ".png");
-  return contractFolder_().createFile(blob).getId();
+  // ドライブに保存できないとき（権限がまだ無いなど）は、署名の画像そのものをシートに残す
+  try { return contractFolder_().createFile(blob).getId(); }
+  catch (e) {
+    console.warn("署名をドライブに保存できず、シートに保存します", e);
+    if (dataUrl.length > 48000) throw new Error("署名の画像が大きすぎます。小さめに書き直してください");
+    return dataUrl;
+  }
 }
 function sigDataUrl_(fileId) {
+  if (String(fileId).indexOf("data:") === 0) return String(fileId);   // シートに保存した署名
   const b = DriveApp.getFileById(fileId).getBlob();
   return "data:image/png;base64," + Utilities.base64Encode(b.getBytes());
 }
@@ -81,9 +88,10 @@ function handleContractCreate_(d) {
   const token = Utilities.getUuid().replace(/-/g, "");
   const sigId = saveSignature_(d.aSignature, id + "_A");
   const sh = ensureSheet_(SpreadsheetApp.getActiveSpreadsheet(), SHEET_CONTRACT, CONTRACT_HEADERS);
-  sh.appendRow([id, fmtDate_(new Date()), d.kind2 || "", d.title, d.body, sha256_(d.body),
+  sh.appendRow([id, contractFmtDate_(new Date()), d.kind2 || "", d.title, d.body, sha256_(d.body),
     d.aName, d.aEmail, d.bName, d.bEmail, token, "署名待ち", sigId, "", "", "", "", ""]);
 
+  logEvent_(id, "契約書を作成し甲が署名", "作成：合言葉で開いた画面から／本文ハッシュ：" + sha256_(d.body) + "／乙：" + d.bName + "（" + d.bEmail + "）");
   const url = d.signBase + "?id=" + id + "&t=" + token;
   safeMail_(d.bEmail, "【電子契約】" + d.title + " への署名のお願い",
     d.bName + " 様\n\n" + d.aName + " 様より、契約書「" + d.title + "」の署名依頼が届いています。\n" +
@@ -100,6 +108,10 @@ function handleContractGet_(id, t) {
   const c = findContract_(id);
   checkToken_(c, t);
   const o = c.o;
+  if (o["状態"] === "署名待ち") {
+    const lock = LockService.getScriptLock();
+    if (lock.tryLock(10000)) { try { logEvent_(id, "乙が署名ページを開いた", "契約書の本文を表示"); } finally { lock.releaseLock(); } }
+  }
   return {
     id: id, title: o["タイトル"], body: o["本文"], aName: o["甲 氏名"], bName: o["乙 氏名"],
     status: o["状態"], createdAt: o["作成日時"], hash: o["本文ハッシュ(SHA-256)"],
@@ -108,49 +120,96 @@ function handleContractGet_(id, t) {
   };
 }
 
-/* 乙が署名 */
+/* 乙が署名（2026-10-22：確認コードでの本人確認・重要事項の同意・動画の記録・合意締結証明書・第三者タイムスタンプを追加） */
 function handleContractSign_(d) {
   const c = findContract_(d.id);
   checkToken_(c, d.t);
   const o = c.o;
   if (o["状態"] !== "署名待ち") throw new Error("この契約はすでに署名済みです");
   if (!d.agree) throw new Error("内容への同意にチェックしてください");
+  const identity = checkOtp_(c, d.otp);                         // 確認コードが合わなければここで止まる
+  // 乙の画面に表示していた本文の指紋と、記録の本文の指紋が同じか（「署名のとき別の文が出ていた」を防ぐ）
+  if (d.shownHash) {
+    const stored = sha256_(String(o["本文"]));
+    if (String(d.shownHash).toLowerCase() !== stored) throw new Error("表示している契約書が最新ではありません。ページを開き直してください");
+    const same = stored === String(o["本文ハッシュ(SHA-256)"]).toLowerCase();
+    logEvent_(d.id, "乙の画面の本文が記録と一致", "乙の端末で計算した本文のSHA-256：" + d.shownHash + (same ? "（作成時の本文ハッシュとも一致）" : "（作成時の本文ハッシュと不一致・要確認）"));
+  }
+  const consents = (Array.isArray(d.consents) ? d.consents : []).map(function (x) { return "☑ " + String(x).slice(0, 200); }).join("\n");
+  const v = d.video || {};
+  const video = v.required ? (v.watched ? "最後まで視聴（終わった時刻 " + String(v.endedAt || "").slice(0, 40) + "、動画ID " + String(v.id || "").slice(0, 20) + "）" : "未視聴") : "この契約書には読み上げ動画なし";
+  if (v.required) logEvent_(d.id, "読み上げ動画を最後まで視聴", video);
+  if (consents) logEvent_(d.id, "重要事項に個別に同意", consents.replace(/\n/g, "／"));
   const bSigId = saveSignature_(d.bSignature, d.id + "_B");
   const now = new Date();
-  const signedAt = fmtDate_(now);
-  const html = contractPdfHtml_(o, sigDataUrl_(o["甲署名画像ID"]), sigDataUrl_(bSigId), signedAt);
-  const pdf = Utilities.newBlob(html, "text/html", "x.html").getAs("application/pdf").setName(o["契約ID"] + "_" + o["タイトル"] + "_署名済.pdf");
-  const file = contractFolder_().createFile(pdf);
+  const signedAt = contractFmtDate_(now);
+  const ua = String(d.userAgent || "").slice(0, 300);
+  logEvent_(d.id, "乙が署名", "手書きサイン＋「内容に同意します」にチェック／端末：" + ua.slice(0, 120));
 
   const set = function (h, v) { c.sh.getRange(c.row, CONTRACT_HEADERS.indexOf(h) + 1).setValue(v); };
   set("乙署名画像ID", bSigId);
   set("乙署名日時", signedAt);
-  set("乙端末情報", String(d.userAgent || "").slice(0, 300));
-  set("署名済PDF ID", file.getId());
-  set("署名済PDF URL", file.getUrl());
+  set("乙端末情報", ua);
   set("署名トークン", "");            // 署名後はリンクを無効化
   set("状態", "署名済み");
 
+  // 合意締結証明書つきの PDF（PDF にできなければ HTML のまま）
+  const extra = { identity: identity, video: video, consents: consents, signedAt: signedAt, ua: ua };
+  const html = contractPdfHtml_(o, sigDataUrl_(o["甲署名画像ID"]), sigDataUrl_(bSigId), signedAt, certificateHtml_(o, extra));
+  const base = o["契約ID"] + "_" + o["タイトル"] + "_署名済";
+  let doc;
+  try { doc = Utilities.newBlob(html, "text/html", "x.html").getAs("application/pdf").setName(base + ".pdf"); }
+  catch (e) { console.warn("PDF にできず HTML で保存", e); doc = Utilities.newBlob(html, "text/html", base + ".html"); }
+  const docHash = evSha256Bytes_(doc.getBytes());
+  const ts = getTimestamp_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, doc.getBytes()));
+  const tsr = ts.ok ? Utilities.newBlob(ts.bytes, "application/timestamp-reply", base + ".tsr") : null;
+  logEvent_(d.id, "署名済みの書面を作成", "書面のSHA-256：" + docHash + (ts.ok ? "／第三者タイムスタンプ：" + ts.time + "（" + ts.tsa + "）" : "／タイムスタンプは取得できず"));
+
+  let pdfId = "", pdfUrl = "（ドライブに保存できず。書面は甲乙へのメールに添付）";
+  try { const file = contractFolder_().createFile(doc); pdfId = file.getId(); pdfUrl = file.getUrl(); if (tsr) contractFolder_().createFile(tsr); }
+  catch (e) { console.warn("書面をドライブに保存できず、メール添付だけにします", e); }
+  set("署名済PDF ID", pdfId);
+  set("署名済PDF URL", pdfUrl);
+  setContractExtra_(c, "PDFハッシュ(SHA-256)", docHash);
+  setContractExtra_(c, "タイムスタンプ(RFC3161)", ts.ok ? ts.token : "（取得できず）");
+  setContractExtra_(c, "タイムスタンプ時刻", ts.ok ? ts.time + "（" + ts.tsa + "）" : "");
+  setContractExtra_(c, "本人確認", identity);
+  setContractExtra_(c, "動画視聴", video);
+  setContractExtra_(c, "重要事項の同意", consents);
+  applyMarkSigned_(o["契約ID"], signedAt, pdfUrl);   // 申込みから作った契約なら「契約申込み」シートも更新（ContractApply.gs）
+
   const body = "契約書「" + o["タイトル"] + "」の署名が完了しました。\n契約ID：" + o["契約ID"] +
-    "\n署名日時：" + signedAt + "\n本文ハッシュ(SHA-256)：" + o["本文ハッシュ(SHA-256)"] + "\n\n署名済みPDFを添付しています。大切に保管してください。";
+    "\n署名日時：" + signedAt + "\n本文ハッシュ(SHA-256)：" + o["本文ハッシュ(SHA-256)"] +
+    "\n署名済み書面のハッシュ(SHA-256)：" + docHash +
+    (ts.ok ? "\n第三者タイムスタンプ（RFC 3161・" + ts.tsa + "）：" + ts.time + "（証明ファイル .tsr を添付）" : "") +
+    "\n\n署名済みの書面を添付しています（最後のページが合意締結証明書です）。大切に保管してください。" +
+    "\n書面が書き換えられていないかは、次のページに書面を入れると確かめられます。\nhttps://miumiumiu4.github.io/arigatou-yoyaku/verify.html";
+  const atts = tsr ? [doc, tsr] : [doc];
   [o["甲 メール"], o["乙 メール"]].forEach(function (to) {
-    try { MailApp.sendEmail({ to: to, subject: "【電子契約】署名完了：" + o["タイトル"], body: body, attachments: [pdf], name: "電子契約" }); }
+    try { MailApp.sendEmail({ to: to, subject: "【電子契約】署名完了：" + o["タイトル"], body: body, attachments: atts, name: "電子契約" }); }
     catch (e) { console.warn("mail error", e); }
   });
-  return { id: o["契約ID"], signedAt: signedAt };
+  const sent = logEvent_(d.id, "署名完了のメールを送信", "甲：" + o["甲 メール"] + "／乙：" + o["乙 メール"] + "（書面" + (tsr ? "とタイムスタンプ" : "") + "を添付）");
+  // 署名までの記録の鎖の先頭を、第三者タイムスタンプで固定する（あとから記録を作り直していないことの裏付け）
+  if (sent) {
+    const ats = getTimestamp_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, sent));
+    logEvent_(d.id, "記録の鎖を時刻証明で固定", "固定した記録のハッシュ：" + sent + (ats.ok ? "／" + ats.time + "（" + ats.tsa + "）／証明：" + ats.token : "／タイムスタンプは取得できず"));
+  }
+  return { id: o["契約ID"], signedAt: signedAt, docHash: docHash, tsTime: ts.ok ? ts.time : "" };
 }
 
-function contractPdfHtml_(o, aSig, bSig, signedAt) {
+function contractPdfHtml_(o, aSig, bSig, signedAt, certHtml) {
   return '<html><head><meta charset="utf-8"><style>' +
     'body{font-family:sans-serif;font-size:11pt;line-height:1.8;color:#111}h1{text-align:center;font-size:17pt}' +
     '.body{white-space:pre-wrap}.sig{margin-top:24px}.sig td{vertical-align:bottom;padding:6px 14px 6px 0}' +
+    '.cert,.log{border-collapse:collapse;width:100%;font-size:8.5pt}.cert th,.cert td,.log th,.log td{border:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top}.cert th{width:28%;background:#f3f3f3}.h{word-break:break-all;font-family:monospace}' +
     '.sig img{height:70px;border-bottom:1px solid #333}.log{margin-top:28px;border-top:1px solid #999;padding-top:8px;font-size:8.5pt;color:#444;word-break:break-all}' +
     '</style></head><body><h1>' + esc_(o["タイトル"]) + '</h1><div class="body">' + esc_(o["本文"]) + '</div>' +
     '<table class="sig"><tr><td>甲：' + esc_(o["甲 氏名"]) + '<br><img src="' + aSig + '"></td>' +
     '<td>乙：' + esc_(o["乙 氏名"]) + '<br><img src="' + bSig + '"></td></tr></table>' +
     '<div class="log">【署名記録】契約ID：' + esc_(o["契約ID"]) + '／作成：' + esc_(o["作成日時"]) + '／乙署名：' + esc_(signedAt) +
     '<br>甲メール：' + esc_(o["甲 メール"]) + '／乙メール：' + esc_(o["乙 メール"]) +
-    '<br>本文ハッシュ(SHA-256)：' + esc_(o["本文ハッシュ(SHA-256)"]) + '</div></body></html>';
+    '<br>本文ハッシュ(SHA-256)：' + esc_(o["本文ハッシュ(SHA-256)"]) + '</div>' + (certHtml || '') + '</body></html>';
 }
 
 /* 紹介ノートなどから：署名済みか確かめる（合言葉が要る。本文・署名・メールは返さない） */

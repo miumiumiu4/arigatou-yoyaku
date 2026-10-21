@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>電子契約の書面を確かめる｜ありがとうエアコンお掃除専門店</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{--bg:#fff8f1;--card:#fff;--ink:#2b2017;--muted:#7a6a5c;--line:#ecdccd;--or:#e07a2f}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;line-height:1.7}
+  header{background:var(--or);color:#fff;padding:16px}header h1{margin:0;font-size:19px}
+  main{max-width:720px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .card h2{margin:0 0 10px;font-size:16px}
+  .drop{border:2px dashed #e0b48f;border-radius:12px;padding:28px;text-align:center;cursor:pointer;background:#fffaf5}
+  .drop.on{background:#fff0e0}
+  .ok{background:#e9f7ec;border:1px solid #b9e2c2;border-radius:12px;padding:14px}
+  .ng{background:#fdecea;border:1px solid #f3b8b0;border-radius:12px;padding:14px}
+  .note{color:var(--muted);font-size:13px}
+  code{word-break:break-all;font-size:12px;background:#f6efe8;padding:2px 4px;border-radius:4px}
+  table{border-collapse:collapse;width:100%;font-size:14px}td{border-bottom:1px solid var(--line);padding:6px 4px;vertical-align:top}td:first-child{color:var(--muted);width:34%}
+  pre{white-space:pre-wrap;word-break:break-all;background:#f6efe8;padding:10px;border-radius:8px;font-size:12px}
+</style>
+</head>
+<body>
+<header><h1>電子契約の書面を確かめる</h1></header>
+<main>
+<div class="card">
+  <h2>① 署名済みの書面（PDF）を入れる</h2>
+  <p class="note">署名完了のメールに付いていた書面を、下の枠にドラッグするか、枠を押して選んでください。<b>書面はこの端末の中で指紋（SHA-256）を計算するだけで、どこにも送りません。</b>送るのは指紋だけです。</p>
+  <label class="drop" id="drop">ここに書面を入れる（または押して選ぶ）<input type="file" id="file" accept=".pdf,.html" hidden></label>
+</div>
+<div class="card" id="out" style="display:none"></div>
+<div class="card">
+  <h2>② 時刻の証明（タイムスタンプ）を自分で確かめるには</h2>
+  <p class="note">署名完了のメールには、書面と一緒に「.tsr」ファイル（第三者のタイムスタンプ局 DigiCert の証明）が付いています。パソコンに OpenSSL があれば、次の2行で「その時刻にこの書面が存在したこと」を確かめられます（書面を1文字でも変えると失敗します）。</p>
+<pre>curl -s https://cacerts.digicert.com/DigiCertTrustedRootG4.crt.pem -o digicert.pem
+openssl ts -verify -data 署名済みの書面.pdf -in 署名済みの書面.tsr -CAfile digicert.pem</pre>
+  <p class="note">「Verification: OK」と出れば、書面はタイムスタンプの時刻から変わっていません。</p>
+</div>
+</main>
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwzgjuZ_AdGByWhWuv4gSnQKBHVK3w96mrUbkED4ReAyFZIO9F-EZW8rECuwYMSxKlV/exec";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function check(f){
+  const out = $("out"); out.style.display = "block"; out.innerHTML = "計算中…";
+  const buf = await f.arrayBuffer();
+  const hex = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(b => b.toString(16).padStart(2, "0")).join("");
+  out.innerHTML = `書面の指紋（SHA-256）：<code>${hex}</code><br>記録と照らし合わせています…`;
+  try{
+    const r = await fetch(`${GAS_URL}?action=contract_verify&h=${hex}`); const j = await r.json();
+    if(!j.ok) throw new Error(j.error);
+    const chain = j.chain && j.chain.ok ? `正しい（${j.chain.rows}件の記録がすべてつながっている）` : `<b>不一致</b>（${j.chain ? j.chain.brokenAt + "行目" : ""}）`;
+    if(j.found){
+      out.innerHTML = `<div class="ok">✅ この書面は、電子契約の記録と<b>一致しました</b>（${esc(j.match)}の指紋が一致）。書き換えられていません。</div>
+      <table style="margin-top:10px"><tr><td>契約ID</td><td>${esc(j.id)}</td></tr><tr><td>契約書名</td><td>${esc(j.title)}</td></tr>
+      <tr><td>状態</td><td>${esc(j.status)}</td></tr><tr><td>甲</td><td>${esc(j.aName)}</td></tr><tr><td>乙</td><td>${esc(j.bName)}</td></tr>
+      <tr><td>乙の署名日時</td><td>${esc(j.signedAt)}</td></tr><tr><td>第三者タイムスタンプ</td><td>${esc(j.tsTime || "（なし）")}</td></tr>
+      <tr><td>記録の鎖</td><td>${chain}</td></tr><tr><td>書面の指紋</td><td><code>${hex}</code></td></tr></table>`;
+    } else {
+      out.innerHTML = `<div class="ng">⚠ この書面は、電子契約の記録と<b>一致しませんでした</b>。メールに付いていた書面そのものか、ほかの契約の書面ではないか確かめてください。1文字でも変わっていると一致しません。</div>
+      <p class="note">書面の指紋：<code>${hex}</code><br>記録の鎖：${chain}</p>`;
+    }
+  }catch(e){ out.innerHTML += `<div class="ng">照らし合わせができませんでした：${esc(e.message)}</div>`; }
+}
+$("file").onchange = e => { if(e.target.files[0]) check(e.target.files[0]); };
+const d = $("drop");
+["dragenter","dragover"].forEach(ev => d.addEventListener(ev, e => { e.preventDefault(); d.classList.add("on"); }));
+["dragleave","drop"].forEach(ev => d.addEventListener(ev, e => { e.preventDefault(); d.classList.remove("on"); }));
+d.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if(f) check(f); });
+</script>
+</body>
+</html>
