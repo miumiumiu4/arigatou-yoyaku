@@ -107,13 +107,22 @@ function runMyNotes() {
       const doneKey = 'note_' + n.note_id;
       // 一度保存したノートでも、あとで書き足された（更新日時が変わった）ら保存し直す
       if (props.getProperty(doneKey) === String(n.modified_time)) continue;
+      if (Date.now() - started > 5 * 60 * 1000) {
+        Logger.log('時間切れが近いので、残りは次の回に保存します');
+        return;
+      }
       const c = zoomUserGet_(token, '/my_notes/notes/' + encodeURIComponent(n.note_id) + '/content?include=transcript');
       if (c.code !== 200) {
         Logger.log('中身の取得に失敗（飛ばします）: ' + n.note_name + ' ' + c.code);
         continue;
       }
-      saveNote_(props, folder, n, c.json);
-      props.setProperty(doneKey, String(n.modified_time));
+      // 1件の失敗で残りの保存まで止まらないように、ノートごとに区切る
+      try {
+        saveNote_(props, folder, n, c.json);
+        props.setProperty(doneKey, String(n.modified_time));
+      } catch (e) {
+        Logger.log('保存に失敗（次の回にもう一度試します）: ' + n.note_name + ' ' + e);
+      }
     }
   }
   if (!backfilled) {
@@ -149,7 +158,11 @@ function listPastMeetings_(days) {
     } while (next);
     if (reportOk) chunks++;
   }
-  if (reportOk || chunks > 0) return { meetings: uniqueMeetings_(report), source: 'レポート', note: notes.join(' / ') };
+  if (reportOk || chunks > 0) {
+    // 「past」は自分が主催した会議だけなので、人の会議に参加した分（pastJoined）も足す
+    const joined = joinedMeetings_(s2s, user, days, now, notes);
+    return { meetings: uniqueMeetings_(report.concat(joined)), source: joined.length ? 'レポート（主催＋参加）' : 'レポート', note: notes.join(' / ') };
+  }
 
   // ② 過去の会議一覧
   const prev = [];
@@ -170,6 +183,24 @@ function listPastMeetings_(days) {
   // ③ クラウド録画（録画した会議だけ）
   const recs = listRecordings_(s2s, mustGet_(props, 'ZOOM_USER_EMAIL'), new Date(now.getTime() - Math.min(days, 30) * 864e5), now);
   return { meetings: uniqueMeetings_(recs), source: 'クラウド録画のみ', note: notes.join(' / ') };
+}
+
+/** 人が主催した会議に参加した分（レポートの type=pastJoined）。取れなければ空で返す */
+function joinedMeetings_(s2s, user, days, now, notes) {
+  const out = [];
+  for (let end = now; end > new Date(now.getTime() - days * 864e5); end = new Date(end.getTime() - 30 * 864e5)) {
+    const from = new Date(Math.max(end.getTime() - 30 * 864e5, now.getTime() - days * 864e5));
+    let next = '';
+    do {
+      const r = zoomUserGet_(s2s, '/report/users/' + user + '/meetings?type=pastJoined&page_size=300'
+        + '&from=' + Utilities.formatDate(from, TZ, 'yyyy-MM-dd') + '&to=' + Utilities.formatDate(end, TZ, 'yyyy-MM-dd')
+        + (next ? '&next_page_token=' + encodeURIComponent(next) : ''));
+      if (r.code !== 200) { notes.push('参加した会議 ' + r.code + ' ' + (r.json && r.json.message)); return out; }
+      (r.json.meetings || []).forEach(m => out.push(m));
+      next = r.json.next_page_token || '';
+    } while (next);
+  }
+  return out;
 }
 
 function uniqueMeetings_(list) {
@@ -197,8 +228,9 @@ function notesForMeeting_(token, m, verbose) {
         + (r.code === 200 ? describe_(r.json) : (r.json && r.json.message)));
     }
     if (r.code === 200) {
-      if (preferred !== f) props.setProperty('MYNOTES_ID_FORM', f);
-      return { notes: r.json.notes || [] };
+      if (!preferred) props.setProperty('MYNOTES_ID_FORM', f);
+      // 片方の形で0件でも、もう片方の形なら見つかることがあるので、0件のときは続けて試す
+      if ((r.json.notes || []).length) return { notes: r.json.notes };
     }
   }
   return { notes: [] };
@@ -208,10 +240,10 @@ function notesForMeeting_(token, m, verbose) {
 
 function saveNote_(props, folder, n, content) {
   const start = new Date(n.created_time);
-  const event = findCalendarEvent_(start);
+  const event = meetingEvent_(start);
   const transcript = transcriptText_(content);
   const memo = content.manual_note_content || '';
-  const title = makeTitle_(props, start, event, n.note_name, (memo + '\n' + transcript).slice(0, 200000))
+  const title = makeTitle_(props, start, event, n.note_name, (memo + '\n' + transcript).slice(0, 30000))
     .replace(/_Zoom書き起こし$/, '_My Notes');
 
   const doc = DocumentApp.create(title);
@@ -235,6 +267,16 @@ function saveNote_(props, folder, n, content) {
   doc.saveAndClose();
   DriveApp.getFileById(doc.getId()).moveTo(folder);
   Logger.log('保存: ' + title);
+}
+
+/** 開始時刻の前後30分の予定のうち、Claude Code の作業メモ（【コード】【Claude Code】）を除いて一番近いもの */
+function meetingEvent_(start) {
+  const events = CalendarApp.getDefaultCalendar()
+    .getEvents(new Date(start.getTime() - 30 * 60000), new Date(start.getTime() + 30 * 60000))
+    .filter(e => !e.isAllDayEvent() && !/^【(コード|Claude Code)】/.test(e.getTitle()));
+  if (!events.length) return null;
+  events.sort((a, b) => Math.abs(a.getStartTime() - start) - Math.abs(b.getStartTime() - start));
+  return events[0];
 }
 
 /** 書き起こしを「時刻 話者: 本文」の行にする。
