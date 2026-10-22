@@ -26,6 +26,7 @@
   .ok{background:var(--green-soft);border:1px solid #bfe3d7;color:#14614f;border-radius:10px;padding:14px}
   .hide{display:none} .sigimg{height:70px;border-bottom:1px solid #333}
   .chk{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:14px} .chk input{width:auto;margin-top:6px}
+  .redbox{border:2px solid #d00;color:#d00;border-radius:6px;padding:8px 10px;margin:8px 0;font-weight:600}
   code{background:#f6ece2;padding:2px 6px;border-radius:4px;word-break:break-all}
 </style>
 </head>
@@ -106,7 +107,20 @@
 
 <!-- ============ 署名モード（乙） ============ -->
 <section id="sign" class="hide">
-  <div class="card">
+  <!-- 書面の受け取り方法（特定商取引法の契約書面だけ。契約内容への同意とは別に、本文を見せる前に承諾をもらう） -->
+  <div class="card hide" id="edBox">
+    <h2>書面の受け取り方法の確認</h2>
+    <p>この契約書は、特定商取引法の「契約書面」です。紙の代わりに、電子で受け取るかどうかを先に選んでください。<b>これは契約の内容に同意することとは別の確認です。</b></p>
+    <div class="contract" style="max-height:none">受け取り方：この画面での表示と、署名が終わったあとに PDF ファイルを電子メールに添付してお送りします。
+送り先：<span id="edTo"></span>
+ファイルの形：PDF（スマホやパソコンで開けます。保存や印刷もできます）
+※電子で受け取らない場合は、紙の書面をお送りします。</div>
+    <label class="chk"><input type="checkbox" id="edAgree"><span>契約書面を、上の方法で電子で受け取ることを承諾します。</span></label>
+    <button class="primary" id="btnEd" type="button">承諾して契約書を見る</button>
+    <p style="text-align:center;margin-top:10px"><button class="ghost" id="btnPaper" type="button">電子ではなく紙で受け取りたい</button></p>
+    <div class="err" id="errEd"></div>
+  </div>
+  <div class="card" id="sMain">
     <h2 id="sTitle"></h2>
     <p class="note" id="sMeta"></p>
     <div class="contract" id="sBody"></div>
@@ -155,12 +169,17 @@ const CONFIG = {
     { need: "研修費用を支払う", text: b => { const m = b.match(/一括払いの場合は金(.+?)（税込）、分割払いの場合は金(.+?)（税込）/); return "研修費用を契約から8日以内に支払います" + (m ? `（一括払いなら${m[1]}、分割・クレジットなら総額${m[2]}。いずれも税込）` : "") + "（第4条）"; } },
     { need: "違約金・損害賠償を請求し得る", text: () => "研修費用の支払いを怠ったり、不誠実な対応を繰り返した場合は、違約金・損害賠償を請求されることがあります（第4条）" },
     { need: "月額ロイヤリティ", text: b => { const m = b.match(/月額ロイヤリティとして[^金]*金([０-９0-9，,]+円)/); return "月額ロイヤリティ" + (m ? m[1] : "") + "（税込）を毎月支払います（第7条）"; } },
-    { need: "返還を請求することはできない", text: () => "途中でやめても、支払った加盟金・研修費用は返ってきません（第20条の4）" },
+    { need: "第４条の２（クーリングオフ）", text: () => "契約書面（署名のあとメールで届くPDF）を受け取ってから20日以内なら、書面かメールで無条件に解約でき、払ったお金は全額返ってきます（第4条の2）" },
+    { need: "提供済み部分は、返還しない", text: b => { const m = b.match(/提供済み部分（研修費用の(.+?)）/); return "20日を過ぎてから途中でやめた場合、研修費用のうち動画・ノウハウ・システムの部分" + (m ? `（${m[1]}）` : "") + "は返ってきません。返ってくるのは、受けていない現場研修の分だけです（第4条・第20条の4）"; } },
+    { need: "収入・案件数の非保証", text: () => "収入や案件の数は保証されません。説明会などで示した例は、同じ収入を約束するものではありません（第2条の3）" },
+    { need: "違約金として金１００万円（税別）を支払う。甲に生じた損害", text: () => "会員サイトの動画やマニュアルを他の人に見せたり、契約の目的以外に使ったりした場合は、100万円（税別）を支払います（第15条）" },
     { need: "500現場", text: () => "研修中や研修のあと、500現場を終える前にやめた場合は、100万円を支払います（第4条）" },
     { need: "損害賠償金を支払う", text: () => "仕事で知ったノウハウなどを外に漏らした場合は、100万円（税別）を支払います（第15条）" },
     { need: "直接取引", text: () => "ありがとうを通じて知り合ったお客様と、直接取引はしません。違反すると違約金がかかります（第4条・第12条）" },
     { need: "被用者となってはならない", text: () => "契約が終わってから1年間は、同じ都道府県でエアコン清掃業を営んだり、その会社に雇われたりしません（第19条）" }
   ],
+  // 本文にこの言葉がある契約書（特定商取引法の契約書面）は、本文を見せる前に「電子で受け取る承諾」をもらう（ContractEvidence.gs と同じ言葉）
+  EDELIVERY_NEED: "電磁的方法で交付する",
   VIDEOS: { "プレミアムプラン": "y92IX92fR_8", "業務委託契約書": "pghfMb3Fd9s" }
 };
 
@@ -202,6 +221,8 @@ async function post(data){
 const $ = id => document.getElementById(id);
 const showErr = (id, m) => { const e = $(id); e.textContent = m; e.style.display = m ? "block" : "none"; };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// 本文の「━」だけの行で挟んだところを赤枠・赤字で見せる（Contract.gs の redBoxHtml_ と同じ決まり。本文そのものは変えない）
+const renderBody = body => String(body).split(/^━{10,}$\n?/m).map((p, i) => i % 2 ? `<div class="redbox">${esc(p.replace(/\n$/, ""))}</div>` : esc(p)).join("");
 
 /* ---------- 入口（合言葉） ---------- */
 function initLogin(){
@@ -237,7 +258,8 @@ function initCreate(){
     update();
   };
   const values = () => Object.fromEntries([...document.querySelectorAll("#fields [data-k]")].map(e => [e.dataset.k, e.value]));
-  const update = () => { $("preview").textContent = fill(TEMPLATES[sel.value].body, values(), $("aName").value||"（甲）", $("bName").value||"（乙）"); };
+  let body = "";
+  const update = () => { body = fill(TEMPLATES[sel.value].body, values(), $("aName").value||"（甲）", $("bName").value||"（乙）"); $("preview").innerHTML = renderBody(body); };
   sel.addEventListener("change", render);
   document.addEventListener("input", update);
   render();
@@ -251,7 +273,7 @@ function initCreate(){
     try{
       const t = TEMPLATES[sel.value];
       const r = await post({
-        kind:"contract_create", kind2: sel.value, title: t.name, body: $("preview").textContent,
+        kind:"contract_create", kind2: sel.value, title: t.name, body,
         aName:$("aName").value, aEmail:$("aEmail").value, bName:$("bName").value, bEmail:$("bEmail").value,
         aSignature: pads.A.c.toDataURL("image/png"), passcode: PASS,
         signBase: location.origin + location.pathname
@@ -274,8 +296,28 @@ async function initSign(id, t){
     const j = await r.json(); if(!j.ok) throw new Error(j.error);
     $("sTitle").textContent = j.title;
     $("sMeta").textContent = `契約ID：${j.id}／作成：${j.createdAt}／甲：${j.aName}／乙：${j.bName}`;
-    $("sBody").textContent = j.body; $("sSigA").src = j.aSignature;
-    $("sign").classList.remove("hide"); initPad("padB","B");
+    $("sBody").innerHTML = renderBody(j.body); $("sSigA").src = j.aSignature;
+    $("sign").classList.remove("hide");
+    // 特定商取引法の契約書面：電子で受け取る承諾が済むまで、本文・動画・署名を出さない
+    if (String(j.body).includes(CONFIG.EDELIVERY_NEED) && !j.edelivery) {
+      const rest = ["sMain", "signBox"].map($);
+      rest.forEach(x => x.classList.add("hide")); $("edBox").classList.remove("hide"); $("edTo").textContent = j.bEmailMasked || "ご登録のメールアドレス";
+      await new Promise(done => {
+        $("btnEd").onclick = async () => {
+          showErr("errEd", "");
+          if (!$("edAgree").checked) return showErr("errEd", "承諾のチェックを入れてください");
+          $("btnEd").disabled = true; $("btnEd").textContent = "記録しています…";
+          try { await post({kind:"contract_edelivery", id, t, choice:"accept", userAgent: navigator.userAgent}); $("edBox").classList.add("hide"); rest.forEach(x => x.classList.remove("hide")); done(); }
+          catch(e){ showErr("errEd", e.message); $("btnEd").disabled = false; $("btnEd").textContent = "承諾して契約書を見る"; }
+        };
+        $("btnPaper").onclick = async () => {
+          showErr("errEd", "");
+          try { await post({kind:"contract_edelivery", id, t, choice:"paper"}); $("edBox").innerHTML = "<h2>紙の書面でお送りします</h2><p>担当者から紙の契約書面をお送りします。このページは閉じて構いません。</p>"; }
+          catch(e){ showErr("errEd", e.message); }
+        };
+      });
+    }
+    initPad("padB","B");
     const videoRequired = setupVideo(j.title);   // 動画がある契約書なら、最後まで見るまで署名できない
     let videoDone = !videoRequired, videoEndedAt = "";
     window.__videoDone = () => { videoDone = true; videoEndedAt = new Date().toISOString(); };

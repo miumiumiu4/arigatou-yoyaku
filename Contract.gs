@@ -116,7 +116,9 @@ function handleContractGet_(id, t) {
     id: id, title: o["タイトル"], body: o["本文"], aName: o["甲 氏名"], bName: o["乙 氏名"],
     status: o["状態"], createdAt: o["作成日時"], hash: o["本文ハッシュ(SHA-256)"],
     aSignature: sigDataUrl_(o["甲署名画像ID"]),
-    signedAt: o["乙署名日時"], pdfUrl: o["状態"] === "署名済み" ? o["署名済PDF URL"] : ""
+    signedAt: o["乙署名日時"], pdfUrl: o["状態"] === "署名済み" ? o["署名済PDF URL"] : "",
+    edelivery: getContractExtra_(c, "電子交付の承諾").indexOf("承諾（") === 0,
+    bEmailMasked: String(o["乙 メール"]).replace(/^(.).*(@.*)$/, "$1***$2")
   };
 }
 
@@ -127,6 +129,9 @@ function handleContractSign_(d) {
   const o = c.o;
   if (o["状態"] !== "署名待ち") throw new Error("この契約はすでに署名済みです");
   if (!d.agree) throw new Error("内容への同意にチェックしてください");
+  // 特定商取引法の契約書面は、電子で受け取る承諾（契約内容への同意とは別）が先に要る（ContractEvidence.gs の 7）
+  const edelivery = String(o["本文"]).indexOf(EDELIVERY_NEED) >= 0 ? getContractExtra_(c, "電子交付の承諾") : "";
+  if (String(o["本文"]).indexOf(EDELIVERY_NEED) >= 0 && edelivery.indexOf("承諾（") !== 0) throw new Error("先に「書面の受け取り方法」で電子での受け取りを承諾してください");
   const identity = checkOtp_(c, d.otp);                         // 確認コードが合わなければここで止まる
   // 乙の画面に表示していた本文の指紋と、記録の本文の指紋が同じか（「署名のとき別の文が出ていた」を防ぐ）
   if (d.shownHash) {
@@ -154,7 +159,7 @@ function handleContractSign_(d) {
   set("状態", "署名済み");
 
   // 合意締結証明書つきの PDF（PDF にできなければ HTML のまま）
-  const extra = { identity: identity, video: video, consents: consents, signedAt: signedAt, ua: ua };
+  const extra = { identity: identity, video: video, consents: consents, signedAt: signedAt, ua: ua, edelivery: edelivery };
   const html = contractPdfHtml_(o, sigDataUrl_(o["甲署名画像ID"]), sigDataUrl_(bSigId), signedAt, certificateHtml_(o, extra));
   const base = o["契約ID"] + "_" + o["タイトル"] + "_署名済";
   let doc;
@@ -198,13 +203,19 @@ function handleContractSign_(d) {
   return { id: o["契約ID"], signedAt: signedAt, docHash: docHash, tsTime: ts.ok ? ts.time : "" };
 }
 
+/* 本文の「━」だけの行で挟んだところを赤枠・赤字にする（特定商取引法の契約書面のクーリングオフの記載）。本文そのもの（ハッシュ）は変えない */
+function redBoxHtml_(body) {
+  return String(body).split(/^━{10,}$\n?/m).map(function (p, i) { return i % 2 ? '<div class="redbox">' + esc_(p.replace(/\n$/, "")) + '</div>' : esc_(p); }).join("");
+}
+
 function contractPdfHtml_(o, aSig, bSig, signedAt, certHtml) {
   return '<html><head><meta charset="utf-8"><style>' +
     'body{font-family:sans-serif;font-size:11pt;line-height:1.8;color:#111}h1{text-align:center;font-size:17pt}' +
     '.body{white-space:pre-wrap}.sig{margin-top:24px}.sig td{vertical-align:bottom;padding:6px 14px 6px 0}' +
     '.cert,.log{border-collapse:collapse;width:100%;font-size:8.5pt}.cert th,.cert td,.log th,.log td{border:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top}.cert th{width:28%;background:#f3f3f3}.h{word-break:break-all;font-family:monospace}' +
+    '.redbox{border:2px solid #d00;color:#d00;padding:8px 10px;margin:8px 0;white-space:pre-wrap}' +
     '.sig img{height:70px;border-bottom:1px solid #333}.log{margin-top:28px;border-top:1px solid #999;padding-top:8px;font-size:8.5pt;color:#444;word-break:break-all}' +
-    '</style></head><body><h1>' + esc_(o["タイトル"]) + '</h1><div class="body">' + esc_(o["本文"]) + '</div>' +
+    '</style></head><body><h1>' + esc_(o["タイトル"]) + '</h1><div class="body">' + redBoxHtml_(o["本文"]) + '</div>' +
     '<table class="sig"><tr><td>甲：' + esc_(o["甲 氏名"]) + '<br><img src="' + aSig + '"></td>' +
     '<td>乙：' + esc_(o["乙 氏名"]) + '<br><img src="' + bSig + '"></td></tr></table>' +
     '<div class="log">【署名記録】契約ID：' + esc_(o["契約ID"]) + '／作成：' + esc_(o["作成日時"]) + '／乙署名：' + esc_(signedAt) +

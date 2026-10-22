@@ -72,6 +72,7 @@ function doPost(e) {
     if (d.kind === "contract_templates") return json_(Object.assign({ ok: true }, handleContractTemplates_(d)));
     if (d.kind === "contract_create") return json_(Object.assign({ ok: true }, handleContractCreate_(d)));
     if (d.kind === "contract_sign")   return json_(Object.assign({ ok: true }, handleContractSign_(d)));
+    if (d.kind === "contract_edelivery") return json_(Object.assign({ ok: true }, handleContractEdelivery_(d)));
     if (d.kind === "contract_status") return json_(Object.assign({ ok: true }, handleContractStatus_(d)));
     const res = d.kind === "recruit" ? handleRecruit_(d) : handleBooking_(d);
     return json_({ ok: true, id: res.id });
