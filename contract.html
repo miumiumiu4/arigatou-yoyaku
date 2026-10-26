@@ -332,7 +332,7 @@ async function initSign(id, t){
     $("btnOtp").onclick = async () => {
       showErr("errSign",""); const b = $("btnOtp"); b.disabled = true; b.textContent = "送信中…";
       try { const r = await post({kind:"contract_otp_send", id, t}); $("otpMsg").textContent = `${r.to} に確認コードを送りました（15分間有効）。届かないときは迷惑メールも見てください。`; b.textContent = "確認コードをもう一度送る"; }
-      catch(e){ showErr("errSign", e.message); b.textContent = "確認コードをメールで送り直す"; }
+      catch(e){ showErr("errSign", e instanceof TypeError ? "通信が途中で切れました。コードは送れている場合があるので、1〜2分待ってメールを見てください。届かなければもう一度押してください" : e.message); b.textContent = "確認コードをメールで送り直す"; }
       b.disabled = false;
     };
     $("btnSign").onclick = async () => {

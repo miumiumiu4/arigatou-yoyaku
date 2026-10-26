@@ -69,19 +69,28 @@ function logRowsFor_(id) {
 
 /* 1. 本人確認コード
  *  甲が署名して依頼メールを送るとき、コードも一緒に送る（OTP_AUTO_TTL の間有効）。
- *  画面のボタンで送り直したコードは15分有効。新しいコードを送ると古いコードは使えなくなる。
+ *  画面のボタンで送り直したコードは15分有効。メールが遅れて届くことがあるので、送り直しても前のコードは期限まで使える。
  *  CacheService は6時間までしか持てないので、コードはスクリプトプロパティに有効期限つきで置く。 */
-const OTP_AUTO_TTL = 24 * 3600;
+const OTP_AUTO_TTL = 72 * 3600;
 const OTP_BUTTON_TTL = 900;
 function otpTtlText_(sec) { return sec >= 3600 ? (sec / 3600) + "時間" : (sec / 60) + "分"; }
+function otpLoad_(props, id) {
+  try { const o = JSON.parse(props.getProperty("otp_" + id) || "null"); if (o && Array.isArray(o.codes)) return o; } catch (e) {}
+  return { codes: [], tries: 0 };
+}
 function issueOtp_(id, ttlSec) {
   const props = PropertiesService.getScriptProperties(), now = Date.now();
   Object.keys(props.getProperties()).forEach(function (k) {   // 期限切れのコードを掃除
     if (k.indexOf("otp_") !== 0) return;
-    try { if (JSON.parse(props.getProperty(k)).exp < now) props.deleteProperty(k); } catch (e) { props.deleteProperty(k); }
+    const o = otpLoad_(props, k.slice(4));
+    if (!o.codes.some(function (x) { return x.exp >= now; })) props.deleteProperty(k);
   });
   const code = String(Math.floor(100000 + Math.random() * 900000));
-  props.setProperty("otp_" + id, JSON.stringify({ h: sha256_(code + "|" + id), exp: now + ttlSec * 1000, tries: 0 }));
+  const o = otpLoad_(props, id);
+  o.codes = o.codes.filter(function (x) { return x.exp >= now; }).slice(-4);
+  o.codes.push({ h: sha256_(code + "|" + id), exp: now + ttlSec * 1000 });
+  o.tries = 0;
+  props.setProperty("otp_" + id, JSON.stringify(o));
   return code;
 }
 function otpMailText_(id, ttlSec) {
@@ -103,44 +112,21 @@ function handleContractOtpSend_(d) {
   return { sent: true, to: c.o["乙 メール"].replace(/^(.).*(@.*)$/, "$1***$2") };
 }
 function checkOtp_(c, otp) {
-  const id = c.o["契約ID"], props = PropertiesService.getScriptProperties();
-  let want = null;
-  try { want = JSON.parse(props.getProperty("otp_" + id) || "null"); } catch (e) {}
-  if (!want || want.exp < Date.now()) throw new Error("確認コードの期限が切れています。「確認コードをメールで送り直す」を押して、新しいコードを入力してください");
-  if (want.tries >= 5) throw new Error("確認コードを5回まちがえました。もう一度コードを送ってください");
-  if (sha256_(String(otp || "").replace(/\s/g, "") + "|" + id) !== want.h) {
-    want.tries++;
-    props.setProperty("otp_" + id, JSON.stringify(want));
+  const id = c.o["契約ID"], props = PropertiesService.getScriptProperties(), now = Date.now();
+  const o = otpLoad_(props, id);
+  const live = o.codes.filter(function (x) { return x.exp >= now; });
+  if (!live.length) throw new Error("確認コードの期限が切れています。「確認コードをメールで送り直す」を押して、新しいコードを入力してください");
+  if (o.tries >= 5) throw new Error("確認コードを5回まちがえました。もう一度コードを送ってください");
+  const h = sha256_(String(otp || "").replace(/\s/g, "") + "|" + id);
+  if (!live.some(function (x) { return x.h === h; })) {
+    o.tries++;
+    props.setProperty("otp_" + id, JSON.stringify(o));
     Utilities.sleep(800);
     throw new Error("確認コードがちがいます");
   }
   props.deleteProperty("otp_" + id);
   logEvent_(id, "確認コードで本人確認", "乙のメール（" + c.o["乙 メール"] + "）に届いたコードが一致");
   return "メールの確認コードで確認（" + contractFmtDate_(new Date()) + "）";
-}
-
-/* 7. 電子交付の承諾（承諾しないときは紙の書面を求める知らせを甲に送る） */
-function handleContractEdelivery_(d) {
-  const c = findContract_(String(d.id || ""));
-  checkToken_(c, d.t);
-  if (c.o["状態"] !== "署名待ち") throw new Error("この契約はすでに署名済みです");
-  const id = c.o["契約ID"];
-  if (d.choice === "paper") {
-    logEvent_(id, "乙が紙の書面を希望", "電子交付を承諾せず、紙の契約書面を希望");
-    setContractExtra_(c, "電子交付の承諾", "承諾せず（紙の書面を希望 " + contractFmtDate_(new Date()) + "）");
-    safeMail_(c.o["甲 メール"], "【電子契約】紙の契約書面の希望（" + id + "）",
-      c.o["甲 氏名"] + " 様\n\n" + c.o["乙 氏名"] + " 様が、契約書「" + c.o["タイトル"] + "」を電子ではなく紙の書面で受け取ることを希望しました。\n" +
-      "電子での署名はできない状態です。紙の契約書面を郵送などで交付してください（特定商取引法の契約書面）。\n契約ID：" + id);
-    return { paper: true };
-  }
-  if (d.choice !== "accept") throw new Error("受け取り方法を選んでください");
-  const at = contractFmtDate_(new Date());
-  const text = "承諾（" + at + "）：契約書面を、署名ページでの表示と署名済みPDFの電子メール添付（" + c.o["乙 メール"] + " 宛・PDF形式）で受け取る";
-  const h = logEvent_(id, "乙が電子交付を承諾", text + "／端末：" + String(d.userAgent || "").slice(0, 120));
-  const ts = h ? getTimestamp_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, h)) : { ok: false };
-  if (h) logEvent_(id, "電子交付の承諾を時刻証明で固定", "固定した記録のハッシュ：" + h + (ts.ok ? "／" + ts.time + "（" + ts.tsa + "）／証明：" + ts.token : "／タイムスタンプは取得できず"));
-  setContractExtra_(c, "電子交付の承諾", text + (ts.ok ? "／時刻証明 " + ts.time : ""));
-  return { accepted: true, at: at };
 }
 
 /* 4. RFC 3161 タイムスタンプ（DigiCert。だめなら FreeTSA） */
