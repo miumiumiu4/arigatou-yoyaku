@@ -6,10 +6,14 @@
  *  4. 第三者タイムスタンプ：完成した PDF の SHA-256 を DigiCert のタイムスタンプ局（RFC 3161）に送り、時刻証明（.tsr）を受け取る
  *  5. 合意締結証明書：PDF の最後のページに、記録・本人確認・同意・ハッシュをまとめる
  *  6. 確かめる窓口：contract_verify（PDF のハッシュから契約の記録とログの鎖の正しさを返す。verify.html から使う）
+ *  7. 電子交付の承諾（2026-10-22 模擬裁判の判決対策）：特定商取引法の契約書面を電子で受け取ることへの承諾を、
+ *     契約内容への同意とは別に、本文を見せる前に取る（contract_edelivery）。承諾は記録の鎖に残し、時刻証明で固定する
  */
 const SHEET_CONTRACT_LOG = "契約ログ";
 const CONTRACT_LOG_HEADERS = ["日時", "契約ID", "出来事", "内容", "前のハッシュ", "このハッシュ"];
-const CONTRACT_EXTRA_HEADERS = ["PDFハッシュ(SHA-256)", "タイムスタンプ(RFC3161)", "タイムスタンプ時刻", "本人確認", "動画視聴", "重要事項の同意"];
+const CONTRACT_EXTRA_HEADERS = ["PDFハッシュ(SHA-256)", "タイムスタンプ(RFC3161)", "タイムスタンプ時刻", "本人確認", "動画視聴", "重要事項の同意", "電子交付の承諾"];
+// 本文にこの言葉がある契約書（特定商取引法の契約書面）は、署名の前に電子交付の承諾が要る
+const EDELIVERY_NEED = "電磁的方法で交付する";
 const TSA_URLS = ["http://timestamp.digicert.com", "https://freetsa.org/tsr"];
 
 function evHex_(bytes) { return bytes.map(function (b) { return ("0" + (b < 0 ? b + 256 : b).toString(16)).slice(-2); }).join(""); }
@@ -24,6 +28,11 @@ function ensureContractHeaders_(sh) {
 function setContractExtra_(c, h, v) {
   ensureContractHeaders_(c.sh);
   c.sh.getRange(c.row, CONTRACT_HEADERS.length + CONTRACT_EXTRA_HEADERS.indexOf(h) + 1).setValue(v);
+}
+
+function getContractExtra_(c, h) {
+  const col = CONTRACT_HEADERS.length + CONTRACT_EXTRA_HEADERS.indexOf(h) + 1;
+  return c.sh.getLastColumn() >= col ? String(c.sh.getRange(c.row, col).getValue() || "") : "";
 }
 
 /* 3. ハッシュチェーンの記録。どの行を書き換えても、それ以降のハッシュが合わなくなる */
@@ -92,6 +101,30 @@ function checkOtp_(c, otp) {
   return "メールの確認コードで確認（" + contractFmtDate_(new Date()) + "）";
 }
 
+/* 7. 電子交付の承諾（承諾しないときは紙の書面を求める知らせを甲に送る） */
+function handleContractEdelivery_(d) {
+  const c = findContract_(String(d.id || ""));
+  checkToken_(c, d.t);
+  if (c.o["状態"] !== "署名待ち") throw new Error("この契約はすでに署名済みです");
+  const id = c.o["契約ID"];
+  if (d.choice === "paper") {
+    logEvent_(id, "乙が紙の書面を希望", "電子交付を承諾せず、紙の契約書面を希望");
+    setContractExtra_(c, "電子交付の承諾", "承諾せず（紙の書面を希望 " + contractFmtDate_(new Date()) + "）");
+    safeMail_(c.o["甲 メール"], "【電子契約】紙の契約書面の希望（" + id + "）",
+      c.o["甲 氏名"] + " 様\n\n" + c.o["乙 氏名"] + " 様が、契約書「" + c.o["タイトル"] + "」を電子ではなく紙の書面で受け取ることを希望しました。\n" +
+      "電子での署名はできない状態です。紙の契約書面を郵送などで交付してください（特定商取引法の契約書面）。\n契約ID：" + id);
+    return { paper: true };
+  }
+  if (d.choice !== "accept") throw new Error("受け取り方法を選んでください");
+  const at = contractFmtDate_(new Date());
+  const text = "承諾（" + at + "）：契約書面を、署名ページでの表示と署名済みPDFの電子メール添付（" + c.o["乙 メール"] + " 宛・PDF形式）で受け取る";
+  const h = logEvent_(id, "乙が電子交付を承諾", text + "／端末：" + String(d.userAgent || "").slice(0, 120));
+  const ts = h ? getTimestamp_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, h)) : { ok: false };
+  if (h) logEvent_(id, "電子交付の承諾を時刻証明で固定", "固定した記録のハッシュ：" + h + (ts.ok ? "／" + ts.time + "（" + ts.tsa + "）／証明：" + ts.token : "／タイムスタンプは取得できず"));
+  setContractExtra_(c, "電子交付の承諾", text + (ts.ok ? "／時刻証明 " + ts.time : ""));
+  return { accepted: true, at: at };
+}
+
 /* 4. RFC 3161 タイムスタンプ（DigiCert。だめなら FreeTSA） */
 function evDer_(tag, bytes) {
   const n = bytes.length, len = n < 128 ? [n] : n < 256 ? [0x81, n] : [0x82, n >> 8, n & 255];
@@ -139,6 +172,7 @@ function certificateHtml_(o, extra) {
     '<tr><th>乙の本人確認</th><td>' + esc_(extra.identity) + '</td></tr>' +
     '<tr><th>読み上げ動画</th><td>' + esc_(extra.video) + '</td></tr>' +
     '<tr><th>重要事項の個別同意</th><td>' + esc_(extra.consents || "（この契約書では重要事項の個別確認はありません）").replace(/\n/g, "<br>") + '</td></tr>' +
+    (extra.edelivery ? '<tr><th>電子交付の承諾</th><td>' + esc_(extra.edelivery) + '</td></tr>' : '') +
     '<tr><th>乙の署名日時</th><td>' + esc_(extra.signedAt) + '</td></tr>' +
     '<tr><th>乙の端末</th><td class=h>' + esc_(extra.ua) + '</td></tr>' +
     '</table><h3 style="font-size:11pt;margin-top:16px">記録（ハッシュの鎖でつながった改ざん防止の記録）</h3>' +
