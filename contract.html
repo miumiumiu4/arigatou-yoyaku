@@ -141,8 +141,8 @@
   </div>
   <div class="card" id="signBox">
     <h2>ご本人の確認</h2>
-    <p class="note">ご本人の確認のため、このメールアドレスに6桁の確認コードをお送りします。届いたコードを入力してください。</p>
-    <button class="ghost" type="button" id="btnOtp">確認コードをメールで送る</button>
+    <p class="note">ご本人の確認のため、署名依頼のメールに書かれた6桁の確認コードを入力してください。見当たらないときや期限が切れたときは、下のボタンで新しいコードをお送りします。</p>
+    <button class="ghost" type="button" id="btnOtp">確認コードをメールで送り直す</button>
     <p class="note" id="otpMsg"></p>
     <input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6桁の確認コード">
     <h2 style="margin-top:18px">乙の署名</h2>
@@ -332,14 +332,14 @@ async function initSign(id, t){
     $("btnOtp").onclick = async () => {
       showErr("errSign",""); const b = $("btnOtp"); b.disabled = true; b.textContent = "送信中…";
       try { const r = await post({kind:"contract_otp_send", id, t}); $("otpMsg").textContent = `${r.to} に確認コードを送りました（15分間有効）。届かないときは迷惑メールも見てください。`; b.textContent = "確認コードをもう一度送る"; }
-      catch(e){ showErr("errSign", e.message); b.textContent = "確認コードをメールで送る"; }
+      catch(e){ showErr("errSign", e.message); b.textContent = "確認コードをメールで送り直す"; }
       b.disabled = false;
     };
     $("btnSign").onclick = async () => {
       showErr("errSign","");
       if(!videoDone) return showErr("errSign","先に読み上げ動画を最後まで見てください");
       if([...document.querySelectorAll(".kp")].some(x => !x.checked)) return showErr("errSign","「大事なところの確認」をすべてチェックしてください");
-      if(!/^\d{6}$/.test($("otp").value.trim())) return showErr("errSign","メールに届いた6桁の確認コードを入力してください（まだなら「確認コードをメールで送る」を押してください）");
+      if(!/^\d{6}$/.test($("otp").value.trim())) return showErr("errSign","署名依頼メールに書かれた6桁の確認コードを入力してください（見当たらなければ「確認コードをメールで送り直す」を押してください）");
       if(!pads.B.drawn) return showErr("errSign","署名を書いてください");
       if(!$("agree").checked) return showErr("errSign","同意にチェックしてください");
       const btn = $("btnSign"); btn.disabled = true; btn.textContent = "署名中…（書面の作成に数十秒かかります）";

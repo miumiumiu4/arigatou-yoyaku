@@ -1,6 +1,6 @@
 /**
  * 電子契約の証拠力を上げる部品（2026-10-22 追加）
- *  1. 本人確認：乙が署名する前に、乙のメールに6桁の確認コードを送り、入力してもらう（contract_otp_send → contract_sign の otp）
+ *  1. 本人確認：乙が署名する前に、乙のメールに6桁の確認コードを送り、入力してもらう（署名依頼メールに同封／contract_otp_send で再送 → contract_sign の otp）
  *  2. 重要事項の個別同意・読み上げ動画の視聴を記録（contract_sign の consents・video）
  *  3. 改ざんしにくい記録：「契約ログ」シートに、出来事ごとに前の行のハッシュをつないだ鎖（ハッシュチェーン）で記録
  *  4. 第三者タイムスタンプ：完成した PDF の SHA-256 を DigiCert のタイムスタンプ局（RFC 3161）に送り、時刻証明（.tsr）を受け取る
@@ -67,7 +67,26 @@ function logRowsFor_(id) {
   return sh.getRange(2, 1, sh.getLastRow() - 1, 6).getDisplayValues().filter(function (r) { return r[1] === id; });
 }
 
-/* 1. 本人確認コード */
+/* 1. 本人確認コード
+ *  甲が署名して依頼メールを送るとき、コードも一緒に送る（OTP_AUTO_TTL の間有効）。
+ *  画面のボタンで送り直したコードは15分有効。新しいコードを送ると古いコードは使えなくなる。
+ *  CacheService は6時間までしか持てないので、コードはスクリプトプロパティに有効期限つきで置く。 */
+const OTP_AUTO_TTL = 24 * 3600;
+const OTP_BUTTON_TTL = 900;
+function otpTtlText_(sec) { return sec >= 3600 ? (sec / 3600) + "時間" : (sec / 60) + "分"; }
+function issueOtp_(id, ttlSec) {
+  const props = PropertiesService.getScriptProperties(), now = Date.now();
+  Object.keys(props.getProperties()).forEach(function (k) {   // 期限切れのコードを掃除
+    if (k.indexOf("otp_") !== 0) return;
+    try { if (JSON.parse(props.getProperty(k)).exp < now) props.deleteProperty(k); } catch (e) { props.deleteProperty(k); }
+  });
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  props.setProperty("otp_" + id, JSON.stringify({ h: sha256_(code + "|" + id), exp: now + ttlSec * 1000, tries: 0 }));
+  return code;
+}
+function otpMailText_(id, ttlSec) {
+  return "確認コード：" + issueOtp_(id, ttlSec) + "\n（署名の画面に入力してください。" + otpTtlText_(ttlSec) + "有効。切れたときは画面の「確認コードをメールで送り直す」で新しいコードが届きます）";
+}
 function handleContractOtpSend_(d) {
   const c = findContract_(String(d.id || ""));
   checkToken_(c, d.t);
@@ -75,9 +94,7 @@ function handleContractOtpSend_(d) {
   const cache = CacheService.getScriptCache();
   const nKey = "otp_sent_" + c.o["契約ID"], n = Number(cache.get(nKey) || 0);
   if (n >= 5) throw new Error("確認コードの送信回数が多すぎます。1時間ほどおいてからお試しください");
-  const code = String(Math.floor(100000 + Math.random() * 900000));
-  cache.put("otp_" + c.o["契約ID"], sha256_(code + "|" + c.o["契約ID"]), 900);
-  cache.put("otp_try_" + c.o["契約ID"], "0", 900);
+  const code = issueOtp_(c.o["契約ID"], OTP_BUTTON_TTL);
   cache.put(nKey, String(n + 1), 3600);
   safeMail_(c.o["乙 メール"], "【電子契約】確認コード " + code,
     c.o["乙 氏名"] + " 様\n\n契約書「" + c.o["タイトル"] + "」に署名するための確認コードです。\n\n確認コード：" + code +
@@ -86,17 +103,18 @@ function handleContractOtpSend_(d) {
   return { sent: true, to: c.o["乙 メール"].replace(/^(.).*(@.*)$/, "$1***$2") };
 }
 function checkOtp_(c, otp) {
-  const id = c.o["契約ID"], cache = CacheService.getScriptCache();
-  const want = cache.get("otp_" + id);
-  if (!want) throw new Error("確認コードを送ってから入力してください（コードは15分で切れます）");
-  const tries = Number(cache.get("otp_try_" + id) || 0);
-  if (tries >= 5) throw new Error("確認コードを5回まちがえました。もう一度コードを送ってください");
-  if (sha256_(String(otp || "").replace(/\s/g, "") + "|" + id) !== want) {
-    cache.put("otp_try_" + id, String(tries + 1), 900);
+  const id = c.o["契約ID"], props = PropertiesService.getScriptProperties();
+  let want = null;
+  try { want = JSON.parse(props.getProperty("otp_" + id) || "null"); } catch (e) {}
+  if (!want || want.exp < Date.now()) throw new Error("確認コードの期限が切れています。「確認コードをメールで送り直す」を押して、新しいコードを入力してください");
+  if (want.tries >= 5) throw new Error("確認コードを5回まちがえました。もう一度コードを送ってください");
+  if (sha256_(String(otp || "").replace(/\s/g, "") + "|" + id) !== want.h) {
+    want.tries++;
+    props.setProperty("otp_" + id, JSON.stringify(want));
     Utilities.sleep(800);
     throw new Error("確認コードがちがいます");
   }
-  cache.remove("otp_" + id);
+  props.deleteProperty("otp_" + id);
   logEvent_(id, "確認コードで本人確認", "乙のメール（" + c.o["乙 メール"] + "）に届いたコードが一致");
   return "メールの確認コードで確認（" + contractFmtDate_(new Date()) + "）";
 }

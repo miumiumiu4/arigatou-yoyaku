@@ -96,6 +96,7 @@ function handleContractCreate_(d) {
   safeMail_(d.bEmail, "【電子契約】" + d.title + " への署名のお願い",
     d.bName + " 様\n\n" + d.aName + " 様より、契約書「" + d.title + "」の署名依頼が届いています。\n" +
     "内容をご確認のうえ、下記URLから署名してください。\n\n" + url + "\n\n" +
+    otpMailText_(id, OTP_AUTO_TTL) + "\n\n" +
     "※このURLは " + d.bName + " 様専用です。他の方に共有しないでください。\n契約ID：" + id);
   safeMail_(d.aEmail, "【電子契約】署名依頼を送信しました（" + id + "）",
     d.aName + " 様\n\n契約書「" + d.title + "」に署名し、" + d.bName + " 様へ署名依頼を送りました。\n" +
