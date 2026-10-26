@@ -195,6 +195,7 @@ function handleContractSign_(d) {
     try { MailApp.sendEmail({ to: to, subject: "【電子契約】署名完了：" + o["タイトル"], body: body, attachments: atts, name: "電子契約" }); }
     catch (e) { console.warn("mail error", e); }
   });
+  selfMailToInbox_(o["甲 メール"], o["契約ID"]);
   const sent = logEvent_(d.id, "署名完了のメールを送信", "甲：" + o["甲 メール"] + "／乙：" + o["乙 メール"] + "（書面" + (tsr ? "とタイムスタンプ" : "") + "を添付）");
   // 署名までの記録の鎖の先頭を、第三者タイムスタンプで固定する（あとから記録を作り直していないことの裏付け）
   if (sent) {
@@ -202,6 +203,21 @@ function handleContractSign_(d) {
     logEvent_(d.id, "記録の鎖を時刻証明で固定", "固定した記録のハッシュ：" + sent + (ats.ok ? "／" + ats.time + "（" + ats.tsa + "）／証明：" + ats.token : "／タイムスタンプは取得できず"));
   }
   return { id: o["契約ID"], signedAt: signedAt, docHash: docHash, tsTime: ts.ok ? ts.time : "" };
+}
+
+/* 甲が自分のアカウント宛てに送った完了メールは、Gmail では「送信済み」にしか残らず受信トレイに来ない。
+ *  送り手と甲が同じアドレスのときだけ、そのメールを受信トレイに戻して未読にする（検索に載るまで少し待つ） */
+function selfMailToInbox_(to, id) {
+  try {
+    const me = String(Session.getEffectiveUser().getEmail() || "").toLowerCase();
+    if (!me || String(to || "").toLowerCase() !== me) return;
+    for (let i = 0; i < 3; i++) {
+      Utilities.sleep(1500);
+      const th = GmailApp.search('in:sent to:' + me + ' subject:署名完了 "' + id + '" newer_than:2d', 0, 5);
+      if (th.length) { th.forEach(function (t) { t.moveToInbox(); t.markUnread(); }); return; }
+    }
+    console.warn("完了メールが見つからず、受信トレイに戻せませんでした", id);
+  } catch (e) { console.warn("完了メールを受信トレイに戻せず", e); }
 }
 
 /* 本文の「━」だけの行で挟んだところを赤枠・赤字にする（特定商取引法の契約書面のクーリングオフの記載）。本文そのもの（ハッシュ）は変えない */
