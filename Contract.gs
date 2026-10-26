@@ -194,6 +194,7 @@ function handleContractSign_(d) {
     try { MailApp.sendEmail({ to: to, subject: "【電子契約】署名完了：" + o["タイトル"], body: body, attachments: atts, name: "電子契約" }); }
     catch (e) { console.warn("mail error", e); }
   });
+  ownerCopyToInbox_(o["甲 メール"], "【電子契約】署名完了：" + o["タイトル"]);
   const sent = logEvent_(d.id, "署名完了のメールを送信", "甲：" + o["甲 メール"] + "／乙：" + o["乙 メール"] + "（書面" + (tsr ? "とタイムスタンプ" : "") + "を添付）");
   // 署名までの記録の鎖の先頭を、第三者タイムスタンプで固定する（あとから記録を作り直していないことの裏付け）
   if (sent) {
@@ -202,6 +203,21 @@ function handleContractSign_(d) {
   }
   return { id: o["契約ID"], signedAt: signedAt, docHash: docHash, tsTime: ts.ok ? ts.time : "" };
 }
+
+/* 甲のメールがこのスクリプトの持ち主と同じだと、Gmail は自分宛てのメールを「送信済み」にしか置かない。
+ * 送ったあとで受信トレイにも入れて未読にする（失敗しても署名は止めない） */
+function ownerCopyToInbox_(to, subject) {
+  try {
+    const me = Session.getEffectiveUser().getEmail();
+    if (!me || String(to).trim().toLowerCase() !== me.toLowerCase()) return;
+    Utilities.sleep(2000);
+    GmailApp.search("in:sent -in:inbox subject:署名完了 newer_than:1d", 0, 10)
+      .filter(function (t) { return t.getFirstMessageSubject() === subject; })
+      .forEach(function (t) { t.moveToInbox(); t.markUnread(); });
+  } catch (e) { console.warn("inbox copy error", e); }
+}
+/* エディタで一度だけ実行して、Gmail を使う許可を出すための関数（ownerCopyToInbox_ 用） */
+function setupGmailPermission() { return GmailApp.getInboxUnreadCount(); }
 
 /* 本文の「━」だけの行で挟んだところを赤枠・赤字にする（特定商取引法の契約書面のクーリングオフの記載）。本文そのもの（ハッシュ）は変えない */
 function redBoxHtml_(body) {
