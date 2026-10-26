@@ -129,6 +129,30 @@ function checkOtp_(c, otp) {
   return "メールの確認コードで確認（" + contractFmtDate_(new Date()) + "）";
 }
 
+/* 7. 電子交付の承諾（承諾しないときは紙の書面を求める知らせを甲に送る） */
+function handleContractEdelivery_(d) {
+  const c = findContract_(String(d.id || ""));
+  checkToken_(c, d.t);
+  if (c.o["状態"] !== "署名待ち") throw new Error("この契約はすでに署名済みです");
+  const id = c.o["契約ID"];
+  if (d.choice === "paper") {
+    logEvent_(id, "乙が紙の書面を希望", "電子交付を承諾せず、紙の契約書面を希望");
+    setContractExtra_(c, "電子交付の承諾", "承諾せず（紙の書面を希望 " + contractFmtDate_(new Date()) + "）");
+    safeMail_(c.o["甲 メール"], "【電子契約】紙の契約書面の希望（" + id + "）",
+      c.o["甲 氏名"] + " 様\n\n" + c.o["乙 氏名"] + " 様が、契約書「" + c.o["タイトル"] + "」を電子ではなく紙の書面で受け取ることを希望しました。\n" +
+      "電子での署名はできない状態です。紙の契約書面を郵送などで交付してください（特定商取引法の契約書面）。\n契約ID：" + id);
+    return { paper: true };
+  }
+  if (d.choice !== "accept") throw new Error("受け取り方法を選んでください");
+  const at = contractFmtDate_(new Date());
+  const text = "承諾（" + at + "）：契約書面を、署名ページでの表示と署名済みPDFの電子メール添付（" + c.o["乙 メール"] + " 宛・PDF形式）で受け取る";
+  const h = logEvent_(id, "乙が電子交付を承諾", text + "／端末：" + String(d.userAgent || "").slice(0, 120));
+  const ts = h ? getTimestamp_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, h)) : { ok: false };
+  if (h) logEvent_(id, "電子交付の承諾を時刻証明で固定", "固定した記録のハッシュ：" + h + (ts.ok ? "／" + ts.time + "（" + ts.tsa + "）／証明：" + ts.token : "／タイムスタンプは取得できず"));
+  setContractExtra_(c, "電子交付の承諾", text + (ts.ok ? "／時刻証明 " + ts.time : ""));
+  return { accepted: true, at: at };
+}
+
 /* 4. RFC 3161 タイムスタンプ（DigiCert。だめなら FreeTSA） */
 function evDer_(tag, bytes) {
   const n = bytes.length, len = n < 128 ? [n] : n < 256 ? [0x81, n] : [0x82, n >> 8, n & 255];
