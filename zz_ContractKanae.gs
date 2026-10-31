@@ -2,7 +2,8 @@
  * かなえさん専用の業務委託契約書（監査・サポート窓口）— 2026-10-31 の会議決定（arigatou Issue #30）
  *
  * Apps Script には「新しいファイル」として足すだけで動きます（ContractTemplates・ContractApply は触りません）。
- * ファイルは上から順に読み込まれるので、このファイルは ContractTemplates・ContractApply より下（あと）に置いてください。
+ * ファイルは上から順に読み込まれるので、このファイルは ContractTemplates・ContractApply より下（あと）に置く。
+ * clasp は名前の順に並べるので、名前を zz_ で始めて必ず最後にしている。順番が狂っても全体が止まらないよう try で包む。
  *
  * - 土台：スタッフ用「原本：業務委託契約書」（全21条）。栗谷さん・のりこさん専用と同じく個別条件で上書き。
  * - クーリングオフの赤枠（冒頭の【重要】と第４条の２）は、プレミアム（kamei）の承認済みの文面をそのまま使う。
@@ -10,6 +11,7 @@
  * - 申込みは専用リンク apply.html?type=kanae からだけ選べる（ほかの人の申込み画面には出ない）。
  * - 題名に「個別条件」が入っているので、署名画面に全員用の読み上げ動画は出ない（本文を読んで署名する）。
  */
+try {
 CONTRACT_TEMPLATES.kanae = {
   name: "業務委託契約書（個別条件：監査・サポート窓口）",
   fields: [
@@ -154,3 +156,6 @@ CONTRACT_TEMPLATES.kanae = {
 };
 
 APPLY_KINDS.kanae = { tpl: "kanae", label: "業務委託（個別条件：監査・サポート窓口）" };   // 専用リンク apply.html?type=kanae からだけ選べる
+} catch (e) {
+  console.error("かなえさん専用ひな形を足せませんでした（ファイルの順番を確認）：" + e);
+}
