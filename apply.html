@@ -42,6 +42,8 @@
     <div class="kind">
       <label><input type="radio" name="type" value="kamei"><span>加盟（プレミアムプラン）<small>ありがとう大学研修・ボランタリーチェーンへの加盟</small></span></label>
       <label><input type="radio" name="type" value="gyomu"><span>スタッフ（業務委託）<small>ありがとうエアコンお掃除専門店の現場を担当する業務委託</small></span></label>
+      <!-- 専用リンクでご案内した方だけの種類（?type=… で開いたときだけ出して固定。ふだんは出さない） -->
+      <label class="private" data-type="kanae" style="display:none"><input type="radio" name="type" value="kanae"><span>業務委託（監査・サポート窓口）<small>専用リンクでご案内した方の業務委託（ありがとうグループの監査とサポート窓口）</small></span></label>
     </div>
   </div>
   <div class="card">
@@ -70,7 +72,10 @@ const $ = id => document.getElementById(id);
 const showErr = m => { $("err").textContent = m; $("err").style.display = m ? "block" : "none"; };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const q = new URLSearchParams(location.search);
-if (q.get("type")) { const r = document.querySelector(`input[name=type][value="${q.get("type")}"]`); if (r) r.checked = true; }
+if (q.get("type")) { const r = [...document.querySelectorAll("input[name=type]")].find(x => x.value === q.get("type")); if (r) r.checked = true; }
+// 専用リンク（?type=kanae など）で開いたときだけ、その種類を出して固定する（ほかの種類は出さない）
+const priv = [...document.querySelectorAll(".kind > label.private")].find(l => l.dataset.type === q.get("type"));
+if (priv) document.querySelectorAll(".kind > label").forEach(l => { l.style.display = l === priv ? "" : "none"; });
 $("f").onsubmit = async ev => {
   ev.preventDefault(); showErr("");
   const type = (document.querySelector("input[name=type]:checked") || {}).value;
