@@ -141,6 +141,7 @@ function handleContractReviewSign_(d) {
   safeMail_(c.o["乙 メール"], "【電子契約】" + title + " への署名のお願い",
     bName + " 様\n\n" + aName + " 様より、契約書「" + title + "」の署名依頼が届いています。\n" +
     "内容をご確認のうえ、下記URLから署名してください。\n\n" + url + "\n\n" +
+    otpMailText_(a.o["契約ID"], OTP_AUTO_TTL) + "\n\n" +
     "※このURLは " + bName + " 様専用です。他の方に共有しないでください。\n契約ID：" + a.o["契約ID"]);
   safeMail_(c.o["甲 メール"], "【電子契約】署名依頼を送信しました（" + a.o["契約ID"] + "）",
     "契約書「" + title + "」に署名し、" + bName + " 様へ署名依頼を送りました。\n乙の署名が完了すると、署名済みPDFがメールで届きます。\n契約ID：" + a.o["契約ID"]);
