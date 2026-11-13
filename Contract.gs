@@ -22,6 +22,15 @@ function contractFolder_() {
   const it = DriveApp.getFoldersByName("電子契約");
   return it.hasNext() ? it.next() : DriveApp.createFolder("電子契約");
 }
+/**
+ * ドライブの使用を許可するための関数。Apps Script の画面で、上の関数選択から
+ * 「authorizeDrive」を選んで ▶ 実行 → 自分のアカウントで許可してください（1回だけ）。
+ * これをしないと、署名済みPDFがドライブに保存されず、メール添付だけになります。
+ */
+function authorizeDrive() {
+  const f = contractFolder_();
+  Logger.log("OK：署名済みの書面はこのフォルダに保存されます → " + f.getUrl());
+}
 function sha256_(text) {
   return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text, Utilities.Charset.UTF_8)
     .map(function (b) { return ("0" + (b < 0 ? b + 256 : b).toString(16)).slice(-2); }).join("");
@@ -172,7 +181,10 @@ function handleContractSign_(d) {
 
   let pdfId = "", pdfUrl = "（ドライブに保存できず。書面は甲乙へのメールに添付）";
   try { const file = contractFolder_().createFile(doc); pdfId = file.getId(); pdfUrl = file.getUrl(); if (tsr) contractFolder_().createFile(tsr); }
-  catch (e) { console.warn("書面をドライブに保存できず、メール添付だけにします", e); }
+  catch (e) {
+    console.warn("書面をドライブに保存できず、メール添付だけにします", e);
+    logEvent_(d.id, "書面をドライブに保存できず", String(e && e.message || e).slice(0, 300) + "（Apps Script で authorizeDrive を一度実行して許可してください）");
+  }
   set("署名済PDF ID", pdfId);
   set("署名済PDF URL", pdfUrl);
   setContractExtra_(c, "PDFハッシュ(SHA-256)", docHash);
