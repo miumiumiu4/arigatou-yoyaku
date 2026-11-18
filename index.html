@@ -2,6 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<script>
+/* 紹介リンク（?ref=）で来た方は、今の予約ページへ紹介コードごと移す（2026-11-19：9/30の締め切り後も紹介パートナーのリンクが使えるように） */
+(function(){try{var q=new URLSearchParams(location.search),r=(q.get("ref")||"").trim();
+if(r&&new Date()>new Date("2026-09-30T23:59:59+09:00")){location.replace("https://miumiumiu4.github.io/arigatou-booking/welcome/?ref="+encodeURIComponent(r.slice(0,30)));}}catch(e){}})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>読者限定 エアコンクリーニング1台6,000円｜ありがとうエアコンお掃除専門店</title>
 <meta name="description" content="メルマガ読者限定。エアコンクリーニング通常8,900円→1台6,000円（約33%OFF）。9月30日までのご予約、作業は10〜11月。3点セット7,000円。">
@@ -208,7 +213,7 @@
   <p class="sub">RESERVE</p>
   <h2>台数を選んで、そのまま予約</h2>
   <p class="note" style="text-align:center;margin:0 0 16px">概算が出ます。入力は最後にまとめて。</p>
-  <div id="closed" class="closed" style="display:none">今回の読者限定予約は9月30日で終了しました。ありがとうございました。</div>
+  <div id="closed" class="closed" style="display:none">今回の読者限定予約は9月30日で終了しました。ありがとうございました。<br><a href="https://miumiumiu4.github.io/arigatou-booking/welcome/">今のご予約はこちら →</a></div>
 
   <div class="card" id="wiz">
     <div class="steps">
